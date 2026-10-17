@@ -130,7 +130,7 @@ $csrfToken = $_SESSION['department_head_login_csrf'];
         </header>
 
         <p class="subtitle">
-            WIS Event Attendance Monitoring and Management System
+            WIS Event and Attendance Monitoring and Management System
         </p>
 
         <h2>Department Head Login</h2>

@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </header>
 
         <p class="subtitle">
-            WIS Event Attendance Monitoring and Management System
+            WIS Event and Attendance Monitoring and Management System
         </p>
 
         <h2>Student Login</h2>
