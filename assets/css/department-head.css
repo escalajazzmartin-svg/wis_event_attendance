@@ -1,0 +1,75 @@
+body {
+    align-items: center;
+}
+
+.container h2 {
+    margin: 25px 0 30px;
+}
+
+.portal-label {
+    margin-top: 12px;
+    color: var(--wis-gold-dark);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.login-description {
+    margin: -10px 0 30px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+    text-align: center;
+}
+
+.select-field input {
+    padding-right: 48px;
+}
+
+.password-field {
+    position: relative;
+}
+
+.password-field .toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: #666;
+    font-size: 19px;
+    cursor: pointer;
+    box-shadow: none;
+}
+
+.password-field .toggle-password:hover {
+    background: transparent;
+    border: none;
+    color: var(--wis-maroon);
+}
+
+.password-field .toggle-password:active {
+    transform: translateY(-50%);
+}
+
+.container form>button {
+    margin-top: 5px;
+}
+
+.login-footer {
+    margin-top: 24px;
+    color: #777;
+    font-size: 11px;
+    text-align: center;
+}

@@ -1,0 +1,105 @@
+
+/* ========================================
+   WEAMMS HOMEPAGE
+   ======================================== */
+
+/* Welcome heading spacing */
+.container h2 {
+    margin-bottom: 20px;
+}
+
+/* Role login buttons */
+.role-login-links {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: 100%;
+    margin-top: 24px;
+}
+
+/* Individual role links */
+.role-login-links a {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    padding: 14px 18px;
+
+    border: 2px solid var(--wis-maroon);
+    border-radius: 7px;
+
+    background: var(--wis-maroon);
+    color: var(--wis-white);
+
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+/* Hover effect */
+.role-login-links a:hover {
+    background: var(--wis-maroon-light);
+    border-color: var(--wis-maroon-dark);
+}
+
+/* Click effect */
+.role-login-links a:active {
+    transform: scale(0.99);
+}
+
+/* Keyboard accessibility */
+.role-login-links a:focus-visible {
+    outline: 3px solid var(--wis-gold);
+    outline-offset: 3px;
+}
+
+/* Homepage error message */
+.home-error {
+    margin-top: 16px;
+    padding: 12px 14px;
+
+    border: 1px solid #E7B5B5;
+    border-radius: 7px;
+
+    background: #FFF0F0;
+    color: var(--wis-maroon);
+
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+/* Small screens */
+@media (max-width: 480px) {
+    .container {
+        padding: 25px 20px;
+    }
+
+    .branding {
+        gap: 8px;
+    }
+
+    h1 {
+        font-size: clamp(38px, 10vw, 60px);
+    }
+
+    .school-logo {
+        flex-basis: 58px;
+        width: 58px;
+    }
+
+    .school-logo img {
+        height: 52px;
+    }
+
+    .subtitle {
+        font-size: 12px;
+        letter-spacing: 0.7px;
+    }
+}
