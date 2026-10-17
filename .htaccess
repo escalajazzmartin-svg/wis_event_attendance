@@ -1,0 +1,20 @@
+# WEAMMS Apache security and directory settings
+Options -Indexes
+DirectoryIndex index.php
+ServerSignature Off
+
+# Do not expose private application folders through the browser.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(?:config|includes|classes|database)(?:/|$) - [F,L,NC]
+</IfModule>
+
+# Block hidden files and common sensitive/backup files.
+<FilesMatch "(^\.|\.(?:env|ini|log|sql|sqlite|bak|backup|old|orig|dist|sh|conf|config|yml|yaml|toml)$)">
+    Require all denied
+</FilesMatch>
+
+# Prevent direct access to source-control and package metadata folders.
+<IfModule mod_rewrite.c>
+    RewriteRule ^(?:\.git|\.svn|vendor)(?:/|$) - [F,L,NC]
+</IfModule>
