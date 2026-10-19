@@ -53,6 +53,7 @@ $logoutUrl = $baseUrl . '/auth/logout.php';
         <img
             src="<?= $baseUrl ?>/assets/images/wisnoname.png"
             alt="WIS Logo">
+
         <div>
             <h2>WEAMMS</h2>
             <span><?= htmlspecialchars(ucwords(str_replace('_', ' ', $role))) ?> Account</span>
@@ -70,7 +71,8 @@ $logoutUrl = $baseUrl . '/auth/logout.php';
                 href="<?= htmlspecialchars($url) ?>"
                 class="<?= $isActive ? 'active' : '' ?>"
                 <?= $isActive ? 'aria-current="page"' : '' ?>>
-                <i class="fa-solid <?= htmlspecialchars($icon) ?>"></i>
+
+                <i class="fa-solid <?= htmlspecialchars($icon) ?>" aria-hidden="true"></i>
                 <span><?= htmlspecialchars($label) ?></span>
             </a>
         <?php endforeach; ?>
@@ -78,7 +80,7 @@ $logoutUrl = $baseUrl . '/auth/logout.php';
 
     <div class="sidebar-bottom">
         <a href="<?= htmlspecialchars($logoutUrl) ?>" class="logout-link">
-            <i class="fa-solid fa-right-from-bracket"></i>
+            <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
             <span>Logout</span>
         </a>
     </div>

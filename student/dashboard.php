@@ -27,11 +27,13 @@ $stats = [
     'total' => 0,
     'present' => 0,
     'absent' => 0,
+    'late' => 0,
     'upcoming' => 0
 ];
 
 $upcomingEvents = [];
 $recentAttendance = [];
+$attendanceEvents = [];
 $databaseWarning = false;
 
 
@@ -52,10 +54,11 @@ try {
         $query = $pdo->prepare(
             "SELECT
                 COUNT(*) AS total,
-                COALESCE(SUM(attendance_status = 'present'), 0) AS present,
-                COALESCE(SUM(attendance_status = 'absent'), 0) AS absent
-             FROM event_attendance
-             WHERE student_id = ?"
+                COALESCE(SUM(LOWER(attendance_status) = 'present'), 0) AS present,
+                COALESCE(SUM(LOWER(attendance_status) = 'absent'), 0) AS absent,
+                COALESCE(SUM(LOWER(attendance_status) = 'late'), 0) AS late
+            FROM event_attendance
+            WHERE student_id = ?"
         );
 
         $query->execute([$studentId]);
@@ -65,6 +68,7 @@ try {
             $stats['total'] = (int) $result['total'];
             $stats['present'] = (int) $result['present'];
             $stats['absent'] = (int) $result['absent'];
+            $stats['late'] = (int) $result['late'];
         }
 
         // Upcoming approved events.
@@ -74,7 +78,7 @@ try {
              WHERE start_at >= NOW()
                AND event_status = 'approved'
              ORDER BY start_at ASC
-             LIMIT 5"
+             LIMIT 1"
         );
 
         $query->execute();
@@ -93,11 +97,67 @@ try {
                 ON e.event_id = ea.event_id
              WHERE ea.student_id = ?
              ORDER BY e.start_at DESC
-             LIMIT 5"
+             LIMIT 1"
         );
 
         $query->execute([$studentId]);
         $recentAttendance = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        // Attendance records grouped by academic period for the chart.
+        $query = $pdo->prepare(
+            "SELECT
+                e.event_id,
+                e.event_title AS name,
+                e.start_at AS date,
+                ap.academic_period_id AS academicPeriodId,
+                ap.semester,
+                ap.academic_year AS academicYear,
+                LOWER(ea.attendance_status) AS attendance_status
+            FROM event_attendance ea
+            INNER JOIN events e
+                ON e.event_id = ea.event_id
+            INNER JOIN academic_periods ap
+                ON ap.academic_period_id = e.academic_period_id
+            WHERE ea.student_id = ?
+            ORDER BY e.start_at DESC"
+        );
+
+        $query->execute([$studentId]);
+        $attendanceRows = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($attendanceRows as $row) {
+            $status = $row['attendance_status'];
+
+            $attendanceEvents[] = [
+                'eventId' => (int) $row['event_id'],
+                'name' => $row['name'],
+                'date' => $row['date'],
+                'academicPeriodId' => (int) $row['academicPeriodId'],
+                'semester' => $row['semester'],
+                'academicYear' => $row['academicYear'],
+                'present' => $status === 'present' ? 1 : 0,
+                'late' => $status === 'late' ? 1 : 0,
+                'absent' => $status === 'absent' ? 1 : 0
+            ];
+        }
+
+        $query->execute([$studentId]);
+        $attendanceRows = $query->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($attendanceRows as $row) {
+            $status = $row['attendance_status'];
+
+            $attendanceEvents[] = [
+                'eventId' => (int) $row['event_id'],
+                'name' => $row['name'],
+                'date' => $row['date'],
+                'semester' => $row['semester'],
+                'academicYear' => $row['academicYear'],
+                'present' => $status === 'present' ? 1 : 0,
+                'late' => $status === 'late' ? 1 : 0,
+                'absent' => $status === 'absent' ? 1 : 0
+            ];
+        }
     }
 } catch (PDOException $e) {
     error_log('Student dashboard database error: ' . $e->getMessage());
@@ -167,42 +227,44 @@ function eventTime(?string $date): string
                     class="text-link">View attendance →</a>
             </div>
 
-            <div class="stats-grid">
-                <article class="stat-card">
-                    <div class="stat-icon maroon-icon">◎</div>
-                    <div class="stat-content">
-                        <span>Total Records</span>
-                        <strong><?= $stats['total'] ?></strong>
-                        <small>Recorded attendance entries</small>
-                    </div>
-                </article>
+            <div class="stats-grid quick-actions-grid">
 
-                <article class="stat-card">
-                    <div class="stat-icon green-icon">✓</div>
-                    <div class="stat-content">
-                        <span>Present</span>
-                        <strong><?= $stats['present'] ?></strong>
-                        <small>Events attended</small>
+                <a class="stat-card quick-action-card"
+                    href="<?= $baseUrl ?>/student/attendance/history.php">
+                    <div class="stat-icon green-icon">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
                     </div>
-                </article>
+                    <div class="stat-content">
+                        <span>Attendance History</span>
+                        <small>Review your past records</small>
+                    </div>
+                    <i class="fa-solid fa-arrow-right quick-action-arrow"></i>
+                </a>
 
-                <article class="stat-card">
-                    <div class="stat-icon red-icon">×</div>
-                    <div class="stat-content">
-                        <span>Absent</span>
-                        <strong><?= $stats['absent'] ?></strong>
-                        <small>Recorded absences</small>
+                <a class="stat-card quick-action-card"
+                    href="<?= $baseUrl ?>/student/appeals/index.php">
+                    <div class="stat-icon gold-icon">
+                        <i class="fa-solid fa-file-circle-exclamation"></i>
                     </div>
-                </article>
+                    <div class="stat-content">
+                        <span>Attendance Appeals</span>
+                        <small>Submit or review an appeal</small>
+                    </div>
+                    <i class="fa-solid fa-arrow-right quick-action-arrow"></i>
+                </a>
 
-                <article class="stat-card">
-                    <div class="stat-icon gold-icon">◷</div>
-                    <div class="stat-content">
-                        <span>Attendance Rate</span>
-                        <strong><?= $attendanceRate ?>%</strong>
-                        <small>Based on recorded entries</small>
+                <a class="stat-card quick-action-card"
+                    href="<?= $baseUrl ?>/student/profile/index.php">
+                    <div class="stat-icon red-icon">
+                        <i class="fa-solid fa-user"></i>
                     </div>
-                </article>
+                    <div class="stat-content">
+                        <span>My Profile</span>
+                        <small>View your student information</small>
+                    </div>
+                    <i class="fa-solid fa-arrow-right quick-action-arrow"></i>
+                </a>
+
             </div>
         </section>
 
@@ -333,53 +395,59 @@ function eventTime(?string $date): string
                 </section>
             </div>
 
-            <section class="panel quick-panel">
-                <div class="section-heading">
-                    <div>
-                        <h2>Quick Actions</h2>
-                        <p>Common student activities.</p>
+            <section class="panel attendance-chart-panel">
+                <div class="attendance-card-header">
+                    <div class="attendance-card-title">
+                        <h2>Attendance Status</h2>
                     </div>
+
+                    <?php if (!empty($attendanceEvents)): ?>
+                        <div class="attendance-filters">
+                            <label for="academicPeriodFilter"></label>
+                            <select id="academicPeriodFilter">
+                                <option value="all">All Academic Periods</option>
+                            </select>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
-                <a class="quick-action"
-                    href="<?= $baseUrl ?>/student/attendance/scan.php">
-                    <span class="quick-icon">▦</span>
-                    <span>
-                        <strong>Scan Event Barcode</strong>
-                        <small>Submit your event attendance</small>
-                    </span>
-                    <span class="action-arrow">→</span>
-                </a>
+                <?php if (empty($attendanceEvents)): ?>
+                    <div class="empty-state">
+                        <i class="fa-solid fa-chart-column"></i>
+                        <strong>No attendance data yet</strong>
+                        <p>Your attendance chart will appear when records are available.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="attendance-chart-layout">
+                        <div class="attendance-chart-container">
+                            <canvas
+                                id="attendanceStatusChart"
+                                aria-label="Stacked bar chart showing attendance status"
+                                role="img">
+                            </canvas>
+                        </div>
 
-                <a class="quick-action"
-                    href="<?= $baseUrl ?>/student/attendance/history.php">
-                    <span class="quick-icon">◷</span>
-                    <span>
-                        <strong>Attendance History</strong>
-                        <small>Review your past records</small>
-                    </span>
-                    <span class="action-arrow">→</span>
-                </a>
+                        <div class="attendance-status-legend">
+                            <div class="attendance-legend-item">
+                                <span class="attendance-count-dot present-dot"></span>
+                                <span>Present</span>
+                                <strong id="presentCount">0</strong>
+                            </div>
 
-                <a class="quick-action"
-                    href="<?= $baseUrl ?>/student/appeals/index.php">
-                    <span class="quick-icon">✎</span>
-                    <span>
-                        <strong>Attendance Appeals</strong>
-                        <small>Submit or review an appeal</small>
-                    </span>
-                    <span class="action-arrow">→</span>
-                </a>
+                            <div class="attendance-legend-item">
+                                <span class="attendance-count-dot late-dot"></span>
+                                <span>Late</span>
+                                <strong id="lateCount">0</strong>
+                            </div>
 
-                <a class="quick-action"
-                    href="<?= $baseUrl ?>/student/profile/index.php">
-                    <span class="quick-icon">♙</span>
-                    <span>
-                        <strong>My Profile</strong>
-                        <small>View your student information</small>
-                    </span>
-                    <span class="action-arrow">→</span>
-                </a>
+                            <div class="attendance-legend-item">
+                                <span class="attendance-count-dot absent-dot"></span>
+                                <span>Absent</span>
+                                <strong id="absentCount">0</strong>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </section>
         </div>
 
@@ -388,6 +456,14 @@ function eventTime(?string $date): string
             <span>Student Account</span>
         </footer>
     </main>
+    <script>
+        window.attendanceEvents = <?= json_encode(
+                                        $attendanceEvents,
+                                        JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT
+                                    ) ?>;
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="<?= $baseUrl ?>/assets/js/chart.js"></script>
 </body>
 
 </html>

@@ -45,6 +45,10 @@ $studentName = $studentName ?? 'Student';
     <link rel="stylesheet"
         href="<?= $baseUrl; ?>/assets/css/header.css">
 
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
     <?php if (!empty($pageCss)): ?>
         <link rel="stylesheet"
             href="<?= $baseUrl; ?>/<?= htmlspecialchars($pageCss, ENT_QUOTES, 'UTF-8'); ?>">
