@@ -137,6 +137,7 @@ function eventTime(?string $date): string
     <title>Student Dashboard | WEAMMS</title>
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="icon" type="image/png" href="../assets/images/wisnoname.png">
     <link rel="stylesheet" href="<?= $baseUrl ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= $baseUrl ?>/assets/css/student.css">
 </head>
