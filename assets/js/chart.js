@@ -156,36 +156,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     label: 'Present',
                     data: [0],
                     backgroundColor: colors.present,
-                    borderColor: colors.present,
                     borderWidth: 0,
-                    borderRadius: 0,
-                    stack: 'attendance',
-                    barThickness: 100,
-                    maxBarThickness: 100
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.5,
+                    maxBarThickness: 45
                 },
                 {
                     label: 'Late',
                     data: [0],
                     backgroundColor: colors.late,
-                    borderColor: colors.late,
                     borderWidth: 0,
-                    borderRadius: 0,
-                    stack: 'attendance',
-                    barThickness: 100,
-                    maxBarThickness: 100
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.5,
+                    maxBarThickness: 45
                 },
                 {
                     label: 'Absent',
                     data: [0],
                     backgroundColor: colors.absent,
-                    borderColor: colors.absent,
                     borderWidth: 0,
-                    borderRadius: 0,
-                    stack: 'attendance',
-                    barThickness: 100,
-                    maxBarThickness: 100
+                    categoryPercentage: 0.7,
+                    barPercentage: 0.5,
+                    maxBarThickness: 45
                 }
-            ]
+            ],
         },
 
         options: {
@@ -195,7 +189,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             scales: {
                 x: {
-                    stacked: true,
+                    stacked: false,
                     grid: {
                         display: false
                     },
@@ -207,19 +201,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 },
 
-
                 y: {
-                    stacked: true,
+                    stacked: false,
                     beginAtZero: true,
+                    grace: '10%',
 
-                    // Determine the axis maximum before calculating ticks.
                     afterDataLimits: function (axis) {
-                        const total = axis.chart.data.datasets.reduce(
-                            function (sum, dataset) {
-                                return sum + Number(dataset.data[0] || 0);
-                            },
-                            0
+                        const values = axis.chart.data.datasets.flatMap(
+                            dataset => dataset.data.map(Number)
                         );
+
+                        const total = Math.max(0, ...values);
 
                         let step;
                         let max;
@@ -240,16 +232,16 @@ document.addEventListener('DOMContentLoaded', function () {
                             step = 20;
                             max = Math.ceil(total / step) * step;
                         } else {
-                            step = Math.pow(10, Math.floor(Math.log10(total))) / 2;
+                            step = Math.pow(
+                                10,
+                                Math.floor(Math.log10(total))
+                            ) / 2;
+
                             max = Math.ceil(total / step) * step;
                         }
 
-                        axis.min = 0;
-                        axis.max = max;
                         axis.options.min = 0;
                         axis.options.max = max;
-
-                        // Save the selected interval for tick generation.
                         axis.$attendanceStep = step;
                     },
 
@@ -259,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const ticks = [];
 
                         for (let value = 0; value <= max; value += step) {
-                            ticks.push({ value: value });
+                            ticks.push({ value });
                         }
 
                         axis.ticks = ticks;
@@ -278,8 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     border: {
                         display: false
                     }
-                },
-
+                }
             },
 
             plugins: {
