@@ -45,10 +45,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 session_regenerate_id(true);
 
-                $_SESSION['user_id'] = $user['user_id'];
+                $_SESSION['user_id'] = (int) $user['user_id'];
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = $user['role_name'];
+                $_SESSION['role'] = strtolower(trim($user['role_name']));
+                $_SESSION['role_name'] = strtolower(trim($user['role_name']));
 
                 $update = $pdo->prepare("
                     UPDATE users

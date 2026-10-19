@@ -39,7 +39,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: flex-start;
-    padding: 30px 20px;
+    padding: 0 20px;
 
     font-family: Arial, Helvetica, sans-serif;
     background: var(--wis-background);
@@ -188,7 +188,7 @@ form {
     color: var(--wis-black);
 
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 16px;
+    font-size: 14px;
 
     cursor: pointer;
     outline: none;
@@ -230,7 +230,7 @@ form {
     color: var(--wis-black);
 
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 16px;
+    font-size: 14px;
 
     outline: none;
 
@@ -292,7 +292,7 @@ form {
     background: transparent;
     color: #666666;
 
-    font-size: 17px;
+    font-size: 20px;
     cursor: pointer;
     outline: none;
     box-shadow: none;
@@ -325,7 +325,7 @@ button {
     color: var(--wis-white);
 
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
 
     cursor: pointer;
