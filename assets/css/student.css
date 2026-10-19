@@ -272,7 +272,7 @@ body.student-dashboard-page {
     margin-bottom: 17px;
 }
 
-.section-heading h2 {
+.section-heading h2, .attendance-card-title h2 {
     margin: 0;
     color: var(--wis-maroon-dark);
     font-size: 20px;
