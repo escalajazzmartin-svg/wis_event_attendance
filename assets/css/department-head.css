@@ -1,75 +1,1011 @@
-body {
-    align-items: center;
+:root {
+    --wis-maroon-light: #B43737;
+    --wis-maroon: #8B1E1E;
+    --wis-maroon-dark: #641414;
+    --wis-gold: #F2C300;
+    --wis-gold-dark: #D6A900;
+    --wis-white: #FFFFFF;
+    --wis-light-blue: #E8F0FE;
+    --wis-black: #171717;
+    --wis-background: #F5F5F5;
+    --wis-border: #B8C1CC;
+    --wis-shadow: 0 8px 25px rgba(0, 0, 0, 0.10);
 }
 
-.container h2 {
-    margin: 25px 0 30px;
+/* Department Head page baseline */
+
+body.department-head-dashboard-page {
+    margin: 0;
+    padding: 0;
+    background: var(--wis-background);
+    color: var(--wis-black);
+    font-family: 'Inter', sans-serif;
 }
 
 .portal-label {
     margin-top: 12px;
     color: var(--wis-gold-dark);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-align: center;
     text-transform: uppercase;
 }
 
+/* ========================================
+
+    WEAMMS DEPARTMENT HEAD DASHBOARD
+
+======================================== */
 .login-description {
     margin: -10px 0 30px;
-    color: #666;
+    color: var(--wis-black);
     font-size: 14px;
     line-height: 1.6;
     text-align: center;
 }
 
-.select-field input {
-    padding-right: 48px;
+.login-footer {
+    margin-top: 24px;
+    color: var(--wis-black);
+    font-size: 14px;
+    text-align: center;
 }
 
-.password-field {
-    position: relative;
+.department-head-dashboard-page {
+    min-width: 0;
 }
 
-.password-field .toggle-password {
-    position: absolute;
-    top: 50%;
-    right: 10px;
-    transform: translateY(-50%);
-    z-index: 2;
-    display: flex;
+.department-head-dashboard-page .dashboard-main {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.department-head-dashboard-page .dashboard-main>* {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.department-head-dashboard-page .primary-action {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    min-height: 32px;
+    gap: 6px;
+    flex-shrink: 0;
     padding: 0;
-    border: none;
+    border: 0;
     border-radius: 0;
     background: transparent;
-    color: #666;
-    font-size: 19px;
-    cursor: pointer;
+    color: var(--wis-maroon);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+    box-shadow: none;
+    transition: color 0.2s ease;
+}
+
+.department-head-dashboard-page .primary-action:hover {
+    background: transparent;
+    color: var(--wis-maroon-light);
+    transform: none;
     box-shadow: none;
 }
 
-.password-field .toggle-password:hover {
-    background: transparent;
-    border: none;
-    color: var(--wis-maroon);
+.department-head-dashboard-page .primary-action i {
+    display: none;
 }
 
-.password-field .toggle-password:active {
+.department-head-dashboard-page .primary-action::after {
+    content: "→";
+    font-size: 20px;
+    font-weight: 400;
+}
+
+/* SUMMARY CARDS */
+
+.department-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 18px;
+}
+
+.department-stat-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    min-width: 0;
+    padding: 22px 18px;
+    background: #fff;
+    border: 1px solid #ece8e4;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgb(0 0 0 / 3%);
+}
+
+.department-stat-card>div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.department-stat-card span {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+    text-align: center;
+}
+
+.department-stat-card strong {
+    color: #303039;
+    text-align: center;
+    font-size: 20px;
+    line-height: 1.2;
+}
+
+.department-stat-card small {
+    color: #858585;
+    font-size: 14px;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.department-stat-icon {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    font-size: 20px;
+}
+
+.gold-icon {
+    color: #92701F;
+    background: #f7efd8;
+}
+
+.blue-icon {
+    color: #2f6eaa;
+    background: #e5effa;
+}
+
+.green-icon {
+    color: #28764e;
+    background: #e1f2e7;
+}
+
+.red-icon {
+    color: #a43b43;
+    background: #f8e6e7;
+}
+
+/* QUICK ACTIONS ------------------------------------------------ */
+
+.department-head-dashboard-page .department-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    width: 100%;
+    min-width: 0;
+}
+
+.department-head-dashboard-page .department-action-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+    min-height: 120px;
+    padding: 20px 48px 20px 22px;
+    box-sizing: border-box;
+    border: 1px solid var(--wis-border);
+    border-radius: 12px;
+    background: var(--wis-white);
+    color: var(--wis-black);
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgb(0 0 0 / 3%);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.department-head-dashboard-page .department-action-card:hover {
+    border-color: var(--wis-gold);
+    box-shadow: var(--wis-shadow);
+}
+
+/* The icon can be wrapped in .stat-icon or be the first direct icon. */
+
+.department-head-dashboard-page .department-action-card>.stat-icon {
+    display: flex;
+    flex: 0 0 54px;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background: #f4f4f4;
+    color: var(--wis-gold-dark);
+    font-size: 20px;
+}
+
+.department-head-dashboard-page .department-action-card>i:first-child {
+    display: flex;
+    flex: 0 0 54px;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 12px;
+    background: #f4f4f4;
+    color: var(--wis-gold-dark);
+    font-size: 20px;
+}
+
+.department-head-dashboard-page .department-action-card .stat-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    min-width: 0;
+}
+
+.department-head-dashboard-page .department-action-card>span {
+    display: block;
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--wis-black);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.department-head-dashboard-page .department-action-card .stat-content>span {
+    color: var(--wis-black);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.department-head-dashboard-page .department-action-card small {
+    color: #666;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+.department-head-dashboard-page .department-action-card .action-arrow {
+    position: absolute;
+    top: 50%;
+    right: 22px;
+    bottom: auto;
+    color: var(--wis-maroon);
+    font-size: 20px;
     transform: translateY(-50%);
 }
 
-.container form>button {
-    margin-top: 5px;
+/* DASHBOARD COLUMNS */
+
+.department-dashboard-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+    align-items: start;
+    gap: 22px;
 }
 
-.login-footer {
-    margin-top: 24px;
-    color: #777;
-    font-size: 11px;
+.department-dashboard-left {
+    display: grid;
+    gap: 15px;
+    min-width: 0;
+}
+
+.department-panel {
+    min-width: 0;
+    padding: 22px;
+    background: #fff;
+    border: 1px solid #ece8e4;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgb(0 0 0 / 3%);
+}
+
+.department-panel .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.department-panel .section-heading h2 {
+    margin: 0 0 7px;
+    color: #303039;
+    font-size: 20px;
+}
+
+.department-panel .section-heading p {
+    margin: 0;
+    color: #818181;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.department-panel .text-link {
+    flex-shrink: 0;
+    color: var(--wis-maroon);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+/* EVENT LISTS */
+
+.department-event-list {
+    display: grid;
+    gap: 0;
+}
+
+.department-event-item {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-width: 0;
+    padding: 15px 0;
+    border-bottom: 1px solid #f0eeeb;
+}
+
+.department-event-item:first-child {
+    padding-top: 0;
+}
+
+.department-event-item:last-child {
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.department-event-date {
+    display: flex;
+    flex: 0 0 54px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 54px;
+    min-height: 60px;
+    border-radius: 8px;
+    background: var(--wis-background);
+    color: var(--wis-maroon);
+}
+
+.department-event-date strong {
+    font-size: 20px;
+}
+
+.department-event-date span {
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.department-event-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.department-event-details h3 {
+    overflow-wrap: anywhere;
+    margin: 0 0 7px;
+    color: #303039;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.department-event-details p,
+
+.department-event-details small {
+    display: block;
+    margin: 0 0 4px;
+    color: #818181;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.department-event-details p {
+    margin: 0;
+    color: var(--wis-black);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.status-pill {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 9px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: capitalize;
+}
+
+.status-approved {
+    background: #e1f2e7;
+    color: #28764e;
+}
+
+.status-pending {
+    background: #fbf0d7;
+    color: #89671b;
+}
+
+.status-rejected,
+
+.status-cancelled {
+    background: #f8e6e7;
+    color: #a43b43;
+}
+
+.status-completed {
+    background: #e5effa;
+    color: #2f6eaa;
+}
+
+/* ATTENDANCE CHART */
+
+.department-chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: 245px;
+    min-width: 0;
+}
+
+.department-attendance-legend {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 22px;
+    flex-wrap: nowrap;
+}
+
+.department-legend-item {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+.department-legend-item strong {
+    margin-left: auto;
+    color: #303039;
+    font-size: 14px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.legend-present {
+    background: #39845a;
+}
+
+.legend-late {
+    background: #d2a13b;
+}
+
+.legend-absent {
+    background: #c94d4d;
+}
+
+.legend-excused {
+    background: #5985c5;
+}
+
+.department-attendance-total {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 22px;
+    padding-top: 17px;
+    border-top: 1px solid #ece8e4;
+    color: #666;
+    font-size: 14px;
+}
+
+.department-attendance-total strong {
+    color: #303039;
+    font-size: 20px;
+}
+
+/* EMPTY STATE AND ALERT */
+
+.department-head-dashboard-page .empty-state {
+    padding: 28px 12px;
     text-align: center;
+}
+
+.department-head-dashboard-page .empty-state>i {
+    display: block;
+    margin-bottom: 13px;
+    color: #b29a60;
+    font-size: 30px;
+}
+
+.department-head-dashboard-page .empty-state strong {
+    display: block;
+    color: #454545;
+    font-size: 14px;
+}
+
+.department-head-dashboard-page .empty-state p {
+    color: #888;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.dashboard-alert {
+    margin-bottom: 22px;
+    padding: 14px 17px;
+    border: 1px solid #edc7c7;
+    border-radius: 8px;
+    background: #fff1f1;
+    color: #923b3b;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+/* =========================================================
+
+    DEPARTMENT HEAD DASHBOARD LAYOUT
+
+    Desktop rules only — no media queries
+
+\========================================================= */
+
+/* Sidebar */
+
+.department-head-dashboard-page .student-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1001;
+    display: flex;
+    flex: 0 0 255px;
+    flex-direction: column;
+    width: 255px;
+    height: 100vh;
+    margin: 0;
+    padding: 26px 16px;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--wis-maroon-dark);
+    color: var(--wis-white);
+}
+
+.department-head-dashboard-page .student-sidebar .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 10px 30px;
+    border-bottom: 1px solid var(--wis-white);
+}
+
+.department-head-dashboard-page .student-sidebar .sidebar-brand img {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    padding: 4px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: var(--wis-white);
+    object-fit: contain;
+}
+
+.department-head-dashboard-page .student-sidebar .sidebar-brand h2 {
+    margin: 0;
+    color: var(--wis-gold);
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+}
+
+.department-head-dashboard-page .student-sidebar .sidebar-brand span {
+    display: block;
+    margin-top: 4px;
+    color: var(--wis-white);
+    font-size: 14px;
+}
+
+.department-head-dashboard-page .student-navigation {
+    display: grid;
+    gap: 7px;
+    margin-top: 28px;
+}
+
+.department-head-dashboard-page .student-navigation a,
+
+.department-head-dashboard-page .student-sidebar .logout-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 13px 14px;
+    border-radius: 8px;
+    color: var(--wis-white);
+    font-size: 14px;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.department-head-dashboard-page .student-navigation a i,
+
+.department-head-dashboard-page .student-sidebar .logout-link i {
+    flex: 0 0 18px;
+    width: 18px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.department-head-dashboard-page .student-navigation a:hover,
+
+.department-head-dashboard-page .student-navigation a.active {
+    background: var(--wis-maroon);
+    color: var(--wis-gold);
+}
+
+.department-head-dashboard-page .student-sidebar .sidebar-bottom {
+    margin-top: auto;
+    padding-top: 25px;
+    border-top: 1px solid var(--wis-white);
+}
+
+.department-head-dashboard-page .student-sidebar .logout-link:hover {
+    background: var(--wis-white);
+    color: var(--wis-maroon);
+}
+
+/* Main content and consistent page gutters */
+
+.department-head-dashboard-page .dashboard-main {
+    display: block;
+    width: calc(100% - 255px);
+    max-width: calc(100% - 255px);
+    min-width: 0;
+    min-height: 100vh;
+    margin: 0 0 0 255px;
+    padding: 0 0 24px;
+    box-sizing: border-box;
+    background: var(--wis-background);
+    color: var(--wis-black);
+    font-family: 'Inter', sans-serif;
+}
+
+.department-head-dashboard-page .dashboard-main>\* {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.department-head-dashboard-page .dashboard-welcome,
+
+.department-head-dashboard-page .dashboard-main>.dashboard-section,
+
+.department-head-dashboard-page .department-dashboard-columns,
+
+.department-head-dashboard-page .dashboard-main>.dashboard-alert,
+
+.department-head-dashboard-page .dashboard-main>.dashboard-footer {
+    margin-right: 30px;
+    margin-left: 30px;
+}
+
+.department-head-dashboard-page .dashboard-welcome {
+    margin-top: 0;
+    margin-bottom: 30px;
+}
+
+.department-head-dashboard-page .dashboard-main>.dashboard-section {
+    margin-top: 30px;
+    margin-bottom: 0;
+}
+
+.department-head-dashboard-page .dashboard-main>.dashboard-section+.dashboard-section {
+    margin-top: 28px;
+}
+
+/* Section headings */
+
+.department-head-dashboard-page .section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 14px;
+}
+
+.department-head-dashboard-page .section-heading>div {
+    min-width: 0;
+}
+
+.department-head-dashboard-page .section-heading h2 {
+    margin: 0;
+    color: var(--wis-maroon-dark);
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.department-head-dashboard-page .section-heading p {
+    margin: 6px 0 0;
+    color: var(--wis-black);
+    font-size: 14px;
+}
+
+/* Summary and quick-action grids */
+
+.department-head-dashboard-page .department-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 18px;
+    box-sizing: border-box;
+}
+
+.department-head-dashboard-page .department-actions-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 30px;
+}
+
+.department-head-dashboard-page .department-stat-card,
+
+.department-head-dashboard-page .department-action-card {
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+.department-head-dashboard-page .department-stat-card {
+    border-color: var(--wis-border);
+    border-radius: 11px;
+    background: var(--wis-white);
+    box-shadow: var(--wis-shadow);
+}
+
+.department-head-dashboard-page .department-stat-card strong {
+    color: var(--wis-maroon-dark);
+}
+
+.department-head-dashboard-page .department-action-card {
+    border-color: var(--wis-border);
+    border-radius: 10px;
+    background: var(--wis-white);
+    box-shadow: var(--wis-shadow);
+}
+
+.department-head-dashboard-page .department-action-card:hover {
+    border-color: var(--wis-gold);
+    box-shadow: var(--wis-shadow);
+}
+
+/* Lower panels */
+
+.department-head-dashboard-page .department-dashboard-columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(280px, 1fr);
+    align-items: start;
+    gap: 22px;
+    margin-top: 0;
+}
+
+.department-head-dashboard-page .department-dashboard-left {
+    display: grid;
+    gap: 22px;
+    min-width: 0;
+}
+
+.department-head-dashboard-page .department-panel {
+    min-width: 0;
+    box-sizing: border-box;
+    border-color: var(--wis-border);
+    border-radius: 11px;
+    background: var(--wis-white);
+    box-shadow: var(--wis-shadow);
+}
+
+.department-head-dashboard-page .dashboard-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 30px;
+    padding: 20px 0 5px;
+    border-top: 1px solid var(--wis-border);
+    color: var(--wis-black);
+    font-size: 14px;
+}
+
+/* Department Head Attendance Chart */
+
+.department-head-dashboard-page .department-chart-container {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    height: 245px;
+    min-width: 0;
+}
+
+.department-head-dashboard-page #departmentAttendanceChart {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ==========================================
+   FIX SCROLLBAR WITHOUT BREAKING THE LAYOUT
+========================================== */
+
+html {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+}
+
+body.department-head-dashboard-page {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+/* Sidebar: scroll independently */
+.department-head-dashboard-page .student-sidebar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100vh;
+    height: 100dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+}
+
+/* Main content: stay beside the sidebar */
+.department-head-dashboard-page .dashboard-main {
+    width: calc(100% - 255px);
+    max-width: calc(100% - 255px);
+    min-width: 0;
+    margin-left: 255px;
+    box-sizing: border-box;
+    overflow-x: clip;
+}
+
+/* Prevent children from expanding the page */
+.department-head-dashboard-page .dashboard-main>*,
+.department-head-dashboard-page .department-dashboard-columns,
+.department-head-dashboard-page .department-panel,
+.department-head-dashboard-page .department-chart-container {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Keep chart canvas inside its container */
+.department-head-dashboard-page #departmentAttendanceChart {
+    display: block;
+    width: 100% !important;
+    max-width: 100%;
+}
+
+/* Keep dashboard columns from forcing horizontal scrolling */
+.department-head-dashboard-page .department-dashboard-columns {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+}
+
+/* ========================================
+   CENTER LOGIN CONTAINER
+======================================== */
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+.container {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+/* ========================================
+   UNIFIED ATTENDANCE CHART LAYOUT
+======================================== */
+
+.department-chart-panel .attendance-chart-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    gap: 22px;
+}
+
+.department-chart-panel .attendance-chart-container {
+    position: relative;
+    width: 100%;
+    height: 245px;
+    min-width: 0;
+}
+
+.department-chart-panel #departmentAttendanceChart {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.department-chart-panel .attendance-status-legend {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+}
+
+.department-chart-panel .attendance-legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+    font-size: 15px;
+}
+
+.department-chart-panel .attendance-legend-item strong {
+    margin-left: auto;
+    color: #303039;
+    font-size: 14px;
+}
+
+.department-chart-panel .attendance-count-dot {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+    border-radius: 50%;
+}
+
+.present-dot {
+    background: #1e8b39;
+}
+
+.late-dot {
+    background: #F2C300;
+}
+
+.absent-dot {
+    background: #641414;
+}
+
+.excused-dot {
+    background: #5985c5;
 }

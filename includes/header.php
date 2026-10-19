@@ -5,6 +5,10 @@
  * File: includes/header.php
  */
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 if (!defined('APP_NAME')) {
     define('APP_NAME', 'WEAMMS');
 }
@@ -13,12 +17,42 @@ if (!defined('BASE_URL')) {
     define('BASE_URL', '/wis_event_attendance');
 }
 
-$pageTitle = $pageTitle ?? 'Student Dashboard';
+$pageTitle = $pageTitle ?? 'Dashboard';
 $pageCss = $pageCss ?? '';
 $baseUrl = rtrim(BASE_URL, '/');
 
-$initial = $initial ?? 'S';
-$studentName = $studentName ?? 'Student';
+/*
+|--------------------------------------------------------------------------
+| Logged-in Account
+|--------------------------------------------------------------------------
+*/
+
+$loggedInUser = $_SESSION['user'] ?? [];
+
+$username = $loggedInUser['username']
+    ?? $_SESSION['username']
+    ?? 'User';
+
+$role = strtolower(trim(
+    $loggedInUser['role_name']
+        ?? $loggedInUser['role']
+        ?? $_SESSION['role_name']
+        ?? $_SESSION['role']
+        ?? ''
+));
+
+$userRole = match ($role) {
+    'admin' => 'Admin',
+    'department_head' => 'Department Head',
+    'student' => 'Student',
+    default => 'User'
+};
+
+$initial = strtoupper(substr(trim($username), 0, 1));
+
+if ($initial === '') {
+    $initial = 'U';
+}
 ?>
 
 <!DOCTYPE html>
@@ -45,8 +79,7 @@ $studentName = $studentName ?? 'Student';
     <link rel="stylesheet"
         href="<?= $baseUrl; ?>/assets/css/header.css">
 
-    <link
-        rel="stylesheet"
+    <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <?php if (!empty($pageCss)): ?>
@@ -68,10 +101,8 @@ $studentName = $studentName ?? 'Student';
             </div>
 
             <div class="student-account-info">
-                <strong>
-                    <?= htmlspecialchars($studentName, ENT_QUOTES, 'UTF-8'); ?>
-                </strong>
-                <span>Student</span>
+                <strong><?= htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></strong>
+                <span><?= htmlspecialchars($userRole, ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
         </div>
     </header>

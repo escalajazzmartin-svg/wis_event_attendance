@@ -28,6 +28,7 @@ $stats = [
     'present' => 0,
     'absent' => 0,
     'late' => 0,
+    'excused' => 0,
     'upcoming' => 0
 ];
 
@@ -56,7 +57,8 @@ try {
                 COUNT(*) AS total,
                 COALESCE(SUM(LOWER(attendance_status) = 'present'), 0) AS present,
                 COALESCE(SUM(LOWER(attendance_status) = 'absent'), 0) AS absent,
-                COALESCE(SUM(LOWER(attendance_status) = 'late'), 0) AS late
+                COALESCE(SUM(LOWER(TRIM(attendance_status)) = 'late'), 0) AS late,
+                COALESCE(SUM(LOWER(TRIM(attendance_status)) = 'excused'), 0) AS excused
             FROM event_attendance
             WHERE student_id = ?"
         );
@@ -69,6 +71,7 @@ try {
             $stats['present'] = (int) $result['present'];
             $stats['absent'] = (int) $result['absent'];
             $stats['late'] = (int) $result['late'];
+            $stats['excused'] = (int) $result['excused'];
         }
 
         // Upcoming approved events.
@@ -112,7 +115,7 @@ try {
                 ap.academic_period_id AS academicPeriodId,
                 ap.semester,
                 ap.academic_year AS academicYear,
-                LOWER(ea.attendance_status) AS attendance_status
+                LOWER(TRIM(ea.attendance_status)) AS attendance_status
             FROM event_attendance ea
             INNER JOIN events e
                 ON e.event_id = ea.event_id
@@ -126,7 +129,7 @@ try {
         $attendanceRows = $query->fetchAll(PDO::FETCH_ASSOC);
 
         foreach ($attendanceRows as $row) {
-            $status = $row['attendance_status'];
+            $status = strtolower(trim((string) ($row['attendance_status'] ?? '')));
 
             $attendanceEvents[] = [
                 'eventId' => (int) $row['event_id'],
@@ -137,25 +140,8 @@ try {
                 'academicYear' => $row['academicYear'],
                 'present' => $status === 'present' ? 1 : 0,
                 'late' => $status === 'late' ? 1 : 0,
-                'absent' => $status === 'absent' ? 1 : 0
-            ];
-        }
-
-        $query->execute([$studentId]);
-        $attendanceRows = $query->fetchAll(PDO::FETCH_ASSOC);
-
-        foreach ($attendanceRows as $row) {
-            $status = $row['attendance_status'];
-
-            $attendanceEvents[] = [
-                'eventId' => (int) $row['event_id'],
-                'name' => $row['name'],
-                'date' => $row['date'],
-                'semester' => $row['semester'],
-                'academicYear' => $row['academicYear'],
-                'present' => $status === 'present' ? 1 : 0,
-                'late' => $status === 'late' ? 1 : 0,
-                'absent' => $status === 'absent' ? 1 : 0
+                'absent' => $status === 'absent' ? 1 : 0,
+                'excused' => $status === 'excused' ? 1 : 0
             ];
         }
     }
@@ -208,7 +194,10 @@ function eventTime(?string $date): string
 
     <main class="dashboard-main">
 
-        <?php require_once __DIR__ . '/../includes/header.php'; ?>
+        <?php
+        $userRole = 'Student';
+        require_once __DIR__ . '/../includes/header.php';
+        ?>
 
         <?php if ($databaseWarning): ?>
             <div class="dashboard-alert">
@@ -430,20 +419,26 @@ function eventTime(?string $date): string
                         <div class="attendance-status-legend">
                             <div class="attendance-legend-item">
                                 <span class="attendance-count-dot present-dot"></span>
-                                <span>Present</span>
+                                <span>Present:</span>
                                 <strong id="presentCount">0</strong>
                             </div>
 
                             <div class="attendance-legend-item">
                                 <span class="attendance-count-dot late-dot"></span>
-                                <span>Late</span>
-                                <strong id="lateCount">0</strong>
+                                <span>Late:</span>
+                                <strong id="lateCount">: 0</strong>
                             </div>
 
                             <div class="attendance-legend-item">
                                 <span class="attendance-count-dot absent-dot"></span>
-                                <span>Absent</span>
+                                <span>Absent:</span>
                                 <strong id="absentCount">0</strong>
+                            </div>
+
+                            <div class="attendance-legend-item">
+                                <span class="attendance-count-dot excused-dot"></span>
+                                <span>Excused:</span>
+                                <strong id="excusedCount">0</strong>
                             </div>
                         </div>
                     </div>
@@ -463,7 +458,7 @@ function eventTime(?string $date): string
                                     ) ?>;
     </script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-    <script src="<?= $baseUrl ?>/assets/js/stud-chart.js"></script>
+    <script src="<?= $baseUrl ?>/assets/js/attendance-charts.js"></script>
 </body>
 
 </html>

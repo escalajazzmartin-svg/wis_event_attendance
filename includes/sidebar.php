@@ -56,7 +56,7 @@ $logoutUrl = $baseUrl . '/auth/logout.php';
 
         <div>
             <h2>WEAMMS</h2>
-            <span><?= htmlspecialchars(ucwords(str_replace('_', ' ', $role))) ?> Account</span>
+            <span><?= htmlspecialchars(ucwords(str_replace('_', ' ', $role))) ?></span>
         </div>
     </div>
 
