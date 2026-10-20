@@ -33,7 +33,6 @@ $menus = [
         ['My Attendance', 'fa-clipboard-check', '/student/attendance/index.php'],
         ['Reports and Analytics', 'fa-chart-column', '/student/attendance/history.php'],
         ['Attendance Appeals', 'fa-file-circle-exclamation', '/student/appeals/index.php'],
-        ['My Profile', 'fa-user', '/student/profile/index.php'],
     ],
 ];
 

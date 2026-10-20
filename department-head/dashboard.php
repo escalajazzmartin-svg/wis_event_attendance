@@ -241,12 +241,15 @@ function eventTime(?string $date): string
         <?php endif; ?>
 
         <!-- SUMMARY CARDS -->
+
+        <!-- SUMMARY CARDS -->
         <section class="dashboard-section">
             <div class="section-heading">
                 <div>
                     <h2>Department Overview</h2>
                     <p>Summary of your department's activities.</p>
                 </div>
+
                 <a class="primary-action"
                     href="<?= $baseUrl ?>/department-head/events/index.php">
                     <i class="fa-solid fa-calendar-plus"></i>
@@ -256,86 +259,37 @@ function eventTime(?string $date): string
 
             <div class="department-stats-grid">
 
-                <article class="department-stat-card">
+                <!-- TOTAL EVENTS -->
+                <a class="department-stat-card"
+                    href="<?= $baseUrl ?>/department-head/events/index.php"
+                    aria-label="View all department events">
                     <div>
                         <span>Total Events</span>
                         <strong><?= $stats['total_events'] ?></strong>
                         <small>All department events</small>
                     </div>
-                </article>
+                </a>
 
-                <article class="department-stat-card">
+                <!-- PENDING REQUESTS -->
+                <a class="department-stat-card"
+                    href="<?= $baseUrl ?>/department-head/events/index.php"
+                    aria-label="View pending event requests">
                     <div>
                         <span>Pending Requests</span>
                         <strong><?= $stats['pending_events'] ?></strong>
                         <small>Awaiting admin review</small>
                     </div>
-                </article>
+                </a>
 
-                <article class="department-stat-card">
-                    <div>
-                        <span>Enrolled Students</span>
-                        <strong><?= $stats['students'] ?></strong>
-                        <small>In your department</small>
-                    </div>
-                </article>
-
-                <article class="department-stat-card">
+                <!-- PENDING APPEALS -->
+                <a class="department-stat-card"
+                    href="<?= $baseUrl ?>/department-head/attendance/index.php"
+                    aria-label="Review pending attendance appeals">
                     <div>
                         <span>Pending Appeals</span>
                         <strong><?= $stats['pending_appeals'] ?></strong>
                         <small>Requiring review</small>
                     </div>
-                </article>
-
-            </div>
-        </section>
-
-        <!-- QUICK ACTIONS -->
-        <section class="dashboard-section">
-            <div class="section-heading">
-                <div>
-                    <h2>Quick Actions</h2>
-                    <p>Access your department management modules.</p>
-                </div>
-            </div>
-
-            <div class="department-actions-grid">
-
-                <a class="department-action-card"
-                    href="<?= $baseUrl ?>/department-head/events/index.php">
-                    <div class="stat-icon gold-icon">
-                        <i class="fa-solid fa-calendar-plus"></i>
-                    </div>
-                    <div class="stat-content">
-                        <span>Event Management</span>
-                        <small>Request and manage events</small>
-                    </div>
-                    <i class="fa-solid fa-arrow-right action-arrow"></i>
-                </a>
-
-                <a class="department-action-card"
-                    href="<?= $baseUrl ?>/department-head/attendance/index.php">
-                    <div class="stat-icon gold-icon">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                    </div>
-                    <div class="stat-content">
-                        <span>Attendance Monitoring</span>
-                        <small>Record and review attendance</small>
-                    </div>
-                    <i class="fa-solid fa-arrow-right action-arrow"></i>
-                </a>
-
-                <a class="department-action-card"
-                    href="<?= $baseUrl ?>/department-head/attendance/settings.php">
-                    <div class="stat-icon gold-icon">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <div class="stat-content">
-                        <span>Attendance Time</span>
-                        <small>Configure attendance cutoffs</small>
-                    </div>
-                    <i class="fa-solid fa-arrow-right action-arrow"></i>
                 </a>
 
             </div>
