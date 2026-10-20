@@ -2,6 +2,7 @@
 session_start();
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/app.php';
 
 $role = strtolower(trim(
     $_SESSION['role_name'] ?? $_SESSION['role'] ?? ''
@@ -12,7 +13,7 @@ if (empty($_SESSION['user_id']) || $role !== 'department_head') {
     exit;
 }
 
-$baseUrl = '/wis_event_attendance';
+$baseUrl = BASE_URL;
 
 $headName = $_SESSION['full_name']
     ?? $_SESSION['name']
@@ -209,10 +210,13 @@ function eventTime(?string $date): string
     <title>Department Head Dashboard | WEAMMS</title>
 
     <link rel="icon" type="image/png"
-        href="<?= $baseUrl ?>.../assets/images/wisnoname.png">
+        href="<?= $baseUrl ?>/assets/images/wisnoname.png">
 
     <link rel="stylesheet"
         href="<?= $baseUrl ?>/assets/css/style.css">
+
+    <link rel="stylesheet"
+        href="<?= $baseUrl ?>/assets/css/header.css">
 
     <link rel="stylesheet"
         href="<?= $baseUrl ?>/assets/css/department-head.css">
@@ -441,10 +445,7 @@ function eventTime(?string $date): string
 
         </div>
 
-        <footer class="dashboard-footer">
-            <span>WEAMMS · WESTMEAD INTERNATIONAL SCHOOL</span>
-            <span>Department Head Account</span>
-        </footer>
+        <?php require __DIR__ . '/../includes/footer.php'; ?>
 
     </main>
 
