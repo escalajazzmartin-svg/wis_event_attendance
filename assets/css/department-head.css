@@ -479,7 +479,7 @@ body.department-head-dashboard-page {
 .management-detail-grid dt {
     margin-bottom: 5px;
     color: #777;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -501,7 +501,7 @@ body.department-head-dashboard-page {
 .management-department-heading h3 {
     margin: 0 0 8px;
     color: var(--wis-maroon-dark);
-    font-size: 17px;
+    font-size: 14px;
 }
 
 .management-detail-section p {
@@ -516,7 +516,7 @@ body.department-head-dashboard-page {
     display: block;
     margin-bottom: 5px;
     color: #777;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -527,7 +527,7 @@ body.department-head-dashboard-page {
     padding-top: 15px;
     border-top: 1px solid #ece8e4;
     color: #777;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .management-roster-heading {
@@ -1470,7 +1470,7 @@ body {
     border-radius: 10px;
     background: #f7efd8;
     color: #92701f;
-    font-size: 17px;
+    font-size: 14px;
 }
 
 .monitor-icon-blue {
@@ -1501,7 +1501,7 @@ body {
 
 .attendance-monitor-card > div > span {
     color: #777;
-    font-size: 12px;
+    font-size: 14px;
     line-height: 1.35;
 }
 
@@ -1535,13 +1535,13 @@ body {
 .attendance-monitor-panel-heading h3 {
     margin: 0;
     color: #303039;
-    font-size: 17px;
+    font-size: 14px;
 }
 
 .attendance-monitor-panel-heading p {
     margin: 4px 0 0;
     color: #777;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .attendance-monitor-filter {
@@ -1551,7 +1551,7 @@ body {
 
 .attendance-monitor-filter > label:not(.attendance-monitor-search) {
     color: #555;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
 }
 
@@ -1571,7 +1571,7 @@ body {
     top: 50%;
     left: 12px;
     color: #888;
-    font-size: 13px;
+    font-size: 14px;
     transform: translateY(-50%);
     pointer-events: none;
 }
@@ -1585,7 +1585,7 @@ body {
     background: var(--wis-white);
     color: var(--wis-black);
     font: inherit;
-    font-size: 13px;
+    font-size: 14px;
 }
 
 .attendance-monitor-search input:focus {
@@ -1625,7 +1625,7 @@ body {
     border-radius: 12px;
     background: #f2f3f5;
     color: #555;
-    font-size: 11px;
+    font-size: 14px;
     white-space: nowrap;
 }
 
@@ -1655,7 +1655,7 @@ body {
 
 .monitor-unrecorded {
     color: #777;
-    font-size: 13px;
+    font-size: 14px;
     font-style: italic;
 }
 
@@ -1750,7 +1750,7 @@ body {
     justify-content: space-between;
     gap: 8px;
     min-width: 0;
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .department-chart-panel .attendance-legend-item strong {

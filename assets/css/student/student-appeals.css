@@ -1,0 +1,469 @@
+/* ========================================
+   STUDENT ATTENDANCE APPEALS
+   Compact, responsive layout
+   Typography: 14px and 20px
+======================================== */
+
+.student-module-page {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+    font-size: 14px;
+}
+
+/* Heading */
+.student-module-page>.section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 0;
+}
+
+.student-module-page .section-heading h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    line-height: 1.4;
+    font-weight: 700;
+}
+
+.student-module-page .section-heading p {
+    margin: 0;
+    color: #6b6262;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Content panel */
+.student-module-page .student-content-panel {
+    min-width: 0;
+    padding: 0;
+    border: 1px solid #eee7e5;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.035);
+}
+
+.student-module-page .student-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.student-module-page .student-table {
+    width: 100%;
+    min-width: 900px;
+    margin: 0;
+    border: none;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 10px;
+    overflow: hidden;
+    font-size: 14px;
+}
+
+/* Table cells */
+.student-module-page .student-table th,
+.student-module-page .student-table td {
+    padding: 10px;
+    border: none;
+    border-bottom: 1px solid #eee9e6;
+    text-align: left;
+    vertical-align: middle;
+    line-height: 1.5;
+    font-size: 14px;
+}
+
+.student-module-page .student-table th {
+    background: var(--wis-maroon, #8b1e1e);
+    color: #fff;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.student-module-page .student-table tbody tr {
+    background: #fff;
+    transition: background 0.2s ease;
+}
+
+.student-module-page .student-table tbody tr:hover {
+    background: #fdfafa;
+}
+
+.student-module-page .student-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* Event links */
+.student-module-page .student-table td a:not(.student-icon-action) {
+    color: var(--wis-maroon, #8b1e1e);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.student-module-page .student-table td a:not(.student-icon-action):hover {
+    text-decoration: underline;
+}
+
+/* Status badges */
+.student-module-page .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 9px;
+    border: 1px solid #e8e2df;
+    border-radius: 20px;
+    background: #f5f2f2;
+    color: #655959;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+/* Pending */
+.student-module-page .status-pill.status-pending {
+    border-color: #f0d7a5;
+    background: #fff6df;
+    color: #805b10;
+}
+
+/* Approved */
+.student-module-page .status-pill.status-approved,
+.student-module-page .status-pill.status-present {
+    border-color: #b9e3c6;
+    background: #eaf8ee;
+    color: #216b39;
+}
+
+/* Rejected */
+.student-module-page .status-pill.status-rejected,
+.student-module-page .status-pill.status-absent {
+    border-color: #efc4c4;
+    background: #fff0f0;
+    color: #a12a2a;
+}
+
+/* Other attendance statuses */
+.student-module-page .status-pill.status-late {
+    border-color: #f0d7a5;
+    background: #fff6df;
+    color: #805b10;
+}
+
+.student-module-page .status-pill.status-excused {
+    border-color: #c9d9f4;
+    background: #edf4ff;
+    color: #315b91;
+}
+
+/* ========================================
+   ICON-ONLY ACTIONS
+======================================== */
+
+.student-module-page .student-appeal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 7px;
+    white-space: nowrap;
+}
+
+.student-module-page .student-appeal-actions form {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.student-module-page .student-appeal-actions .student-icon-action {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 34px;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #e6dada;
+    border-radius: 7px;
+    background: #fff;
+    color: var(--wis-maroon, #8b1e1e);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.student-module-page .student-appeal-actions .student-icon-action i {
+    display: inline-block;
+    font-size: 14px;
+    line-height: 1;
+    pointer-events: none;
+}
+
+.student-module-page .student-appeal-actions .student-icon-action:hover {
+    border-color: #d8bcbc;
+    background: #fff2f2;
+    color: var(--wis-maroon, #8b1e1e);
+}
+
+.student-module-page .student-appeal-actions .student-icon-action:active {
+    transform: scale(0.96);
+}
+
+.student-module-page .student-appeal-actions .student-icon-action:focus-visible {
+    outline: 2px solid var(--wis-maroon, #8b1e1e);
+    outline-offset: 2px;
+}
+
+/* Withdraw icon */
+.student-module-page .student-appeal-actions .student-icon-withdraw {
+    border-color: #efcece;
+    color: #a12a2a;
+}
+
+.student-module-page .student-appeal-actions .student-icon-withdraw:hover {
+    border-color: #dfa8a8;
+    background: #fff0f0;
+    color: #8c1e1e;
+}
+
+/* Actions column */
+.student-module-page .student-table td[data-label="Actions"] {
+    min-width: 125px;
+    white-space: nowrap;
+}
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+
+.student-module-page .empty-state {
+    padding: 24px 14px;
+    text-align: center;
+    box-shadow: none;
+}
+
+.student-module-page .empty-state strong {
+    display: block;
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+.student-module-page .empty-state p {
+    margin: 8px 0 14px;
+    color: #6b6262;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.student-module-page .empty-state .management-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+.student-module-page .empty-state .management-button i {
+    font-size: 14px;
+}
+
+/* Font Awesome */
+.student-module-page .fa,
+.student-module-page .fas,
+.student-module-page .far,
+.student-module-page .fa-solid,
+.student-module-page .fa-regular {
+    font-size: 14px;
+}
+
+/* ========================================
+   TABLET
+======================================== */
+
+@media (max-width: 900px) {
+
+    .student-module-page .student-table th,
+    .student-module-page .student-table td {
+        padding: 9px;
+    }
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+    .student-module-page {
+        gap: 12px;
+    }
+
+    .student-module-page>.section-heading {
+        align-items: flex-start;
+    }
+
+    .student-module-page .section-heading h2,
+    .student-module-page .empty-state strong {
+        font-size: 20px;
+    }
+
+    .student-module-page .student-content-panel {
+        border-radius: 9px;
+    }
+
+    .student-module-page .student-table-wrap {
+        overflow: visible;
+    }
+
+    .student-module-page .student-table {
+        display: block;
+        min-width: 0;
+        width: 100%;
+        border-radius: 9px;
+    }
+
+    .student-module-page .student-table thead {
+        display: none;
+    }
+
+    .student-module-page .student-table tbody {
+        display: block;
+        width: 100%;
+    }
+
+    .student-module-page .student-table tbody tr {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee9e6;
+    }
+
+    .student-module-page .student-table tbody tr:last-child {
+        border-bottom: none;
+    }
+
+    .student-module-page .student-table tbody tr:hover {
+        background: #fff;
+    }
+
+    .student-module-page .student-table th,
+    .student-module-page .student-table td {
+        box-sizing: border-box;
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .student-module-page .student-table td {
+        display: grid;
+        grid-template-columns: minmax(95px, 0.7fr) minmax(0, 1.3fr);
+        align-items: start;
+        gap: 10px;
+        padding: 7px 10px;
+        border: none;
+        overflow-wrap: anywhere;
+    }
+
+    .student-module-page .student-table td::before {
+        content: attr(data-label);
+        color: #6b6262;
+        font-size: 14px;
+        font-weight: 700;
+    }
+
+    .student-module-page .student-table td[data-label="Actions"] {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding-top: 10px;
+        white-space: normal;
+    }
+
+    .student-module-page .student-table td[data-label="Actions"]::before {
+        flex: 0 0 100%;
+    }
+
+    .student-module-page .student-appeal-actions {
+        display: inline-flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .student-module-page .student-appeal-actions .student-icon-action {
+        flex-basis: 36px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+    }
+}
+
+/* ========================================
+   PRINT
+======================================== */
+
+@media print {
+
+    .student-sidebar,
+    .dashboard-topbar,
+    .dashboard-footer,
+    .student-module-page .student-table td[data-label="Actions"] {
+        display: none !important;
+    }
+
+    .student-module-page {
+        gap: 14px;
+    }
+
+    .student-module-page .student-content-panel {
+        padding: 0;
+        border: none;
+        box-shadow: none;
+    }
+
+    .student-module-page .student-table {
+        display: table;
+        min-width: 0;
+        overflow: visible;
+    }
+
+    .student-module-page .student-table thead {
+        display: table-header-group;
+    }
+
+    .student-module-page .student-table tbody {
+        display: table-row-group;
+    }
+
+    .student-module-page .student-table tr {
+        display: table-row;
+        padding: 0;
+        border: none;
+    }
+
+    .student-module-page .student-table th,
+    .student-module-page .student-table td {
+        display: table-cell;
+        padding: 10px;
+    }
+
+    .student-module-page .student-table td::before {
+        display: none;
+    }
+}

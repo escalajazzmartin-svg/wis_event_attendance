@@ -1,6 +1,10 @@
 <?php
 
+require_once __DIR__ . '/../../includes/student_context.php';
+
 $studentPageTitle = 'My Attendance';
+$studentPageCss = 'student-attendance.css';
+
 require_once __DIR__ . '/../../includes/student_layout_start.php';
 
 $attendanceStmt = $pdo->prepare(
@@ -35,23 +39,54 @@ foreach ($records as $record) {
 
 <section class="dashboard-section student-module-page">
     <div class="section-heading">
-        <div><h2>My Attendance</h2><p>View your personal event attendance and present your barcode at an authorized station.</p></div>
+        <div>
+            <h2>My Attendance</h2>
+            <p>View your personal event attendance and present your barcode at an authorized station.</p>
+        </div>
         <a class="management-button" href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/scan.php">View My Barcode</a>
     </div>
     <div class="student-attendance-stats student-attendance-summary">
-        <div><dt>Present</dt><dd><?= $summary['present'] ?></dd></div>
-        <div><dt>Late</dt><dd><?= $summary['late'] ?></dd></div>
-        <div><dt>Absent</dt><dd><?= $summary['absent'] ?></dd></div>
-        <div><dt>Excused</dt><dd><?= $summary['excused'] ?></dd></div>
+        <div>
+            <dt>Present</dt>
+            <dd><?= $summary['present'] ?></dd>
+        </div>
+        <div>
+            <dt>Late</dt>
+            <dd><?= $summary['late'] ?></dd>
+        </div>
+        <div>
+            <dt>Absent</dt>
+            <dd><?= $summary['absent'] ?></dd>
+        </div>
+        <div>
+            <dt>Excused</dt>
+            <dd><?= $summary['excused'] ?></dd>
+        </div>
     </div>
     <div class="student-content-panel">
-        <div class="section-heading"><div><h2>Attendance Records</h2><p><?= count($records) ?> records · Attendance status changes must be reviewed by authorized staff.</p></div></div>
+        <div class="section-heading">
+            <div>
+                <h2>Attendance Records</h2>
+                <p><?= count($records) ?> records · Attendance status changes must be reviewed by authorized staff.</p>
+            </div>
+        </div>
         <?php if ($records === []): ?>
-            <div class="empty-state"><strong>No attendance records yet</strong><p>Once an authorized attendance station records your scan, your record will appear here.</p></div>
+            <div class="empty-state"><strong>No attendance records yet</strong>
+                <p>Once an authorized attendance station records your scan, your record will appear here.</p>
+            </div>
         <?php else: ?>
             <div class="student-table-wrap">
                 <table class="student-table">
-                    <thead><tr><th scope="col">Event</th><th scope="col">Schedule</th><th scope="col">Academic period</th><th scope="col">Status</th><th scope="col">Timestamp</th><th scope="col">Appeal</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th scope="col">Event</th>
+                            <th scope="col">Schedule</th>
+                            <th scope="col">Academic period</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Timestamp</th>
+                            <th scope="col">Appeal</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($records as $record): ?>
                             <tr>
@@ -81,4 +116,5 @@ foreach ($records as $record) {
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 </main>
 </body>
+
 </html>

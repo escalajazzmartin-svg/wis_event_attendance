@@ -1,6 +1,10 @@
 <?php
 
+require_once __DIR__ . '/../../includes/student_context.php';
+
 $studentPageTitle = 'Event Details';
+$studentPageCss = 'student-events.css';
+
 require_once __DIR__ . '/../../includes/student_layout_start.php';
 
 $eventId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
@@ -55,7 +59,10 @@ if ($status === 'approved') {
 
 <section class="dashboard-section student-module-page">
     <div class="section-heading">
-        <div><h2><?= studentEscape($event['event_title']) ?></h2><p>Event schedule and attendance requirements.</p></div>
+        <div>
+            <h2><?= studentEscape($event['event_title']) ?></h2>
+            <p>Event schedule and attendance requirements.</p>
+        </div>
         <a class="management-link" href="<?= studentEscape($studentBaseUrl) ?>/student/events/index.php">Back to schedules</a>
     </div>
     <article class="student-content-panel student-event-detail">
@@ -64,12 +71,27 @@ if ($status === 'approved') {
             <span><?= studentEscape($event['academic_year']) ?> · <?= studentEscape($event['semester']) ?></span>
         </div>
         <dl class="student-detail-grid">
-            <div><dt>Starts</dt><dd><?= studentEscape(studentDateTime($event['start_at'])) ?></dd></div>
-            <div><dt>Ends</dt><dd><?= studentEscape(studentDateTime($event['end_at'])) ?></dd></div>
-            <div><dt>Venue</dt><dd><?= studentEscape($event['venue'] ?: 'To be announced') ?></dd></div>
-            <div><dt>Academic period</dt><dd><?= studentEscape($event['academic_year']) ?> · <?= studentEscape($event['semester']) ?></dd></div>
+            <div>
+                <dt>Starts</dt>
+                <dd><?= studentEscape(studentDateTime($event['start_at'])) ?></dd>
+            </div>
+            <div>
+                <dt>Ends</dt>
+                <dd><?= studentEscape(studentDateTime($event['end_at'])) ?></dd>
+            </div>
+            <div>
+                <dt>Venue</dt>
+                <dd><?= studentEscape($event['venue'] ?: 'To be announced') ?></dd>
+            </div>
+            <div>
+                <dt>Academic period</dt>
+                <dd><?= studentEscape($event['academic_year']) ?> · <?= studentEscape($event['semester']) ?></dd>
+            </div>
         </dl>
-        <section class="student-detail-section"><h3>Description</h3><p><?= nl2br(studentEscape($event['event_description'] ?: 'No event description provided.')) ?></p></section>
+        <section class="student-detail-section">
+            <h3>Description</h3>
+            <p><?= nl2br(studentEscape($event['event_description'] ?: 'No event description provided.')) ?></p>
+        </section>
         <section class="student-detail-section">
             <h3>Attendance requirements</h3>
             <?php if ($event['present_until'] && $event['late_until'] && $event['absent_after']): ?>
@@ -83,12 +105,21 @@ if ($status === 'approved') {
             <?php endif; ?>
         </section>
         <?php if ($event['event_status'] === 'cancellation_requested'): ?>
-            <section class="student-detail-section student-event-notice"><h3>Schedule change notice</h3><p>A cancellation request is under administrator review. <?= nl2br(studentEscape($event['cancellation_request_remarks'] ?: '')) ?></p></section>
+            <section class="student-detail-section student-event-notice">
+                <h3>Schedule change notice</h3>
+                <p>A cancellation request is under administrator review. <?= nl2br(studentEscape($event['cancellation_request_remarks'] ?: '')) ?></p>
+            </section>
         <?php endif; ?>
         <?php if ($event['event_status'] === 'cancelled'): ?>
-            <section class="student-detail-section student-event-notice"><h3>Event cancelled</h3><p><?= nl2br(studentEscape($event['admin_remarks'] ?: 'This event has been cancelled.')) ?></p></section>
+            <section class="student-detail-section student-event-notice">
+                <h3>Event cancelled</h3>
+                <p><?= nl2br(studentEscape($event['admin_remarks'] ?: 'This event has been cancelled.')) ?></p>
+            </section>
         <?php elseif ($event['admin_remarks']): ?>
-            <section class="student-detail-section"><h3>Schedule update</h3><p><?= nl2br(studentEscape($event['admin_remarks'])) ?></p><small>Updated <?= studentEscape(studentDateTime($event['updated_at'])) ?></small></section>
+            <section class="student-detail-section">
+                <h3>Schedule update</h3>
+                <p><?= nl2br(studentEscape($event['admin_remarks'])) ?></p><small>Updated <?= studentEscape(studentDateTime($event['updated_at'])) ?></small>
+            </section>
         <?php endif; ?>
         <?php if ($attendance): ?>
             <section class="student-detail-section">
@@ -106,4 +137,5 @@ if ($status === 'approved') {
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 </main>
 </body>
+
 </html>

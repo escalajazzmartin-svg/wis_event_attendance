@@ -1,6 +1,10 @@
 <?php
 
-$studentPageTitle = 'My Barcode';
+require_once __DIR__ . '/../../includes/student_context.php';
+
+$studentPageTitle = 'Scan Attendance';
+$studentPageCss = 'student-attendance.css';
+
 require_once __DIR__ . '/../../includes/student_layout_start.php';
 
 $barcodeToken = $studentProfile['barcode_token'];
@@ -8,7 +12,10 @@ $barcodeToken = $studentProfile['barcode_token'];
 
 <section class="dashboard-section student-module-page">
     <div class="section-heading">
-        <div><h2>My Attendance Barcode</h2><p>Present this barcode at an authorized attendance station for an event in your department.</p></div>
+        <div>
+            <h2>My Attendance Barcode</h2>
+            <p>Present this barcode at an authorized attendance station for an event in your department.</p>
+        </div>
         <button class="management-button management-button-secondary" type="button" onclick="window.print()">Print barcode</button>
     </div>
     <article class="student-content-panel student-barcode-card">
@@ -43,4 +50,5 @@ $barcodeToken = $studentProfile['barcode_token'];
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 </main>
 </body>
+
 </html>

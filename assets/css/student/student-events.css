@@ -1,0 +1,739 @@
+/* ========================================
+   STUDENT EVENTS — GENERAL
+======================================== */
+
+.student-events-page {
+    min-width: 0;
+}
+
+.student-events-page .student-event-date,
+.student-events-page .student-schedule-heading>span:last-child {
+    color: #777;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.student-events-page .student-schedule-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+
+/* ========================================
+   FILTER FORM
+   Search | Schedule | Academic Period
+======================================== */
+
+.student-events-page .student-filter-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 180px 260px;
+    grid-template-rows: auto;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin: 0 0 18px;
+    padding: 12px 0 0;
+    border: none;
+    border-radius: 12px;
+    background: none;
+    box-sizing: border-box;
+}
+
+.student-events-page .student-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.student-events-page .student-filter-field label.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.student-events-page .student-filter-field input,
+.student-events-page .student-filter-field select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
+    height: 46px;
+    margin: 0;
+    padding: 0 12px;
+    border: 1px solid var(--wis-border);
+    border-radius: 9px;
+    background: #fff;
+    color: var(--wis-black);
+    font-family: inherit;
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.student-events-page .student-filter-field input::placeholder {
+    color: #888;
+    opacity: 1;
+}
+
+.student-events-page .student-filter-field input:focus,
+.student-events-page .student-filter-field select:focus {
+    outline: none;
+    border-color: var(--wis-maroon);
+    box-shadow: 0 0 0 3px rgba(139, 30, 30, 0.1);
+}
+
+.student-events-page .student-search-field {
+    grid-column: 1;
+    grid-row: 1;
+}
+
+.student-events-page .student-phase-field {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.student-events-page .student-period-field {
+    grid-column: 3;
+    grid-row: 1;
+}
+
+/* Filtering is automatic, so hide the Apply button. */
+.student-events-page .student-filter-actions {
+    display: none;
+}
+
+.student-events-page .student-filter-form noscript {
+    grid-column: 1 / -1;
+}
+
+.student-events-page .student-filter-form noscript button {
+    min-height: 42px;
+}
+
+.student-events-page .student-results-count {
+    margin: 0 0 16px;
+    color: #666;
+    font-size: 14px;
+}
+
+
+/* ========================================
+   STUDENT SCHEDULE CARDS
+======================================== */
+
+/* ========================================
+   STUDENT SCHEDULE CARDS — COMPACT
+======================================== */
+
+.student-events-page .student-event-list.student-event-grid {
+    display: grid;
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+}
+
+.student-events-page .student-schedule-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 9px;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--wis-border);
+    border-radius: 10px;
+    background: #fff;
+    box-sizing: border-box;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.035);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.student-events-page .student-schedule-card:hover {
+    border-color: #d8bcbc;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.055);
+}
+
+.student-events-page .student-schedule-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 6px 8px;
+    min-width: 0;
+}
+
+.student-events-page .student-schedule-date {
+    color: #777;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.student-events-page .student-schedule-title {
+    margin: 0;
+    color: var(--wis-black);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.student-events-page .student-schedule-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.student-events-page .student-schedule-title a:hover {
+    color: var(--wis-maroon);
+}
+
+.student-events-page .student-schedule-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.student-events-page .student-schedule-venue,
+.student-events-page .student-schedule-period {
+    overflow-wrap: anywhere;
+}
+
+.student-events-page .student-event-notice {
+    margin: 0;
+    padding: 7px 9px;
+    border-left: 3px solid var(--wis-maroon);
+    border-radius: 4px;
+    background: #faf5f4;
+    color: #555;
+    font-size: 14px;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
+
+.student-events-page .student-schedule-details {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: 5px;
+    margin-top: auto;
+    padding-top: 1px;
+    color: var(--wis-maroon);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.student-events-page .student-schedule-details:hover {
+    text-decoration: underline;
+}
+
+
+/* ========================================
+   STATUS PILLS
+======================================== */
+
+.student-events-page .status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+    white-space: nowrap;
+}
+
+.student-events-page .status-approved,
+.student-events-page .status-completed {
+    border-color: #a8d9b5;
+    background: #e4f5e9;
+    color: #216b36;
+}
+
+.student-events-page .status-cancellation_requested {
+    border-color: #f0d78c;
+    background: #fff4d6;
+    color: #795900;
+}
+
+.student-events-page .status-cancelled {
+    border-color: #efb5b5;
+    background: #fde8e8;
+    color: #9b2525;
+}
+
+
+/* ========================================
+   TABLES
+======================================== */
+
+.student-events-page .table-responsive,
+.student-events-page .table-wrapper {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 0 0 20px;
+    border: 1px solid var(--wis-border);
+    border-radius: 10px;
+    background: #fff;
+    -webkit-overflow-scrolling: touch;
+}
+
+.student-events-page table {
+    width: 100%;
+    min-width: 650px;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background: #fff;
+    color: var(--wis-black);
+    font-size: 14px;
+    text-align: left;
+}
+
+.student-events-page table thead {
+    background: #f8f5f4;
+}
+
+.student-events-page table th {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--wis-border);
+    color: var(--wis-maroon-dark);
+    font-size: 14px;
+    font-weight: 700;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.student-events-page table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+    line-height: 1.5;
+}
+
+.student-events-page table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.student-events-page table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.student-events-page table tbody tr:hover {
+    background: #faf7f6;
+}
+
+.student-events-page table td a {
+    color: var(--wis-maroon);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.student-events-page table td a:hover {
+    text-decoration: underline;
+}
+
+.student-events-page table td .status-pill {
+    vertical-align: middle;
+}
+
+.student-events-page table .empty-row td,
+.student-events-page table td[colspan] {
+    padding: 24px 16px;
+    color: #666;
+    text-align: center;
+}
+
+
+/* ========================================
+   EMPTY STATE
+======================================== */
+
+.student-events-page .student-content-panel.empty-state {
+    padding: 36px 20px;
+    border: 1px solid #eee5e2;
+    border-radius: 12px;
+    background: #fff;
+    text-align: center;
+}
+
+.student-events-page .empty-state>strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--wis-maroon-dark);
+    font-size: 14px;
+}
+
+.student-events-page .empty-state p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+
+/* ========================================
+   RESPONSIVE — TABLET
+======================================== */
+
+@media (max-width: 1000px) {
+    .student-events-page .student-filter-form {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 0.7fr);
+        gap: 12px;
+    }
+
+    .student-events-page .student-search-field {
+        grid-column: 1 / -1;
+        grid-row: 1;
+    }
+
+    .student-events-page .student-phase-field {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .student-events-page .student-period-field {
+        grid-column: 2;
+        grid-row: 2;
+    }
+}
+
+@media (max-width: 900px) {
+    .student-events-page .student-event-list.student-event-grid {
+        grid-template-columns: repeat(1, minmax(0, 1fr));
+        gap: 10px;
+    }
+}
+
+
+/* ========================================
+   RESPONSIVE — MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+    .student-events-page .student-filter-form {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .student-events-page .student-search-field,
+    .student-events-page .student-phase-field,
+    .student-events-page .student-period-field {
+        grid-column: 1;
+        grid-row: auto;
+    }
+
+    .student-events-page .student-filter-field input,
+    .student-events-page .student-filter-field select {
+        height: 44px;
+    }
+
+    .student-events-page .student-event-list.student-event-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+
+    .student-events-page .student-schedule-card {
+        gap: 8px;
+        padding: 12px 14px;
+    }
+
+    .student-events-page .student-schedule-title {
+        font-size: 14px;
+    }
+
+    .student-events-page .student-schedule-top {
+        align-items: flex-start;
+    }
+
+    .student-events-page .student-schedule-details {
+        align-self: flex-start;
+        white-space: normal;
+    }
+
+    .student-events-page .table-responsive,
+    .student-events-page .table-wrapper {
+        border-radius: 8px;
+    }
+
+    .student-events-page table {
+        min-width: 600px;
+        font-size: 14px;
+    }
+
+    .student-events-page table th,
+    .student-events-page table td {
+        padding: 11px 12px;
+    }
+}
+
+/* ========================================
+   STUDENT EVENT DETAILS — UI IMPROVEMENTS
+   Append this file after the existing student CSS.
+======================================== */
+
+.student-module-page {
+    min-width: 0;
+}
+
+.student-module-page>.section-heading {
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.student-module-page>.section-heading h2 {
+    margin: 0 0 5px;
+    color: var(--wis-maroon-dark, #6f1717);
+    font-size: 20px;
+    line-height: 1.25;
+}
+
+.student-module-page>.section-heading p {
+    margin: 0;
+    color: #686868;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.student-module-page>.section-heading .management-link {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 13px;
+    border: 1px solid #e3d2d2;
+    border-radius: 8px;
+    color: var(--wis-maroon, #8b1e1e);
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.student-module-page>.section-heading .management-link:hover {
+    background: #faf3f3;
+    border-color: #cfaeae;
+    text-decoration: none;
+}
+
+.student-module-page .student-event-detail {
+    width: 100%;
+    max-width: none;
+    padding: clamp(18px, 2.2vw, 28px);
+    border: 1px solid var(--wis-border, #e7e1df);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 3px 14px rgba(40, 20, 20, .045);
+    box-sizing: border-box;
+}
+
+.student-module-page .student-schedule-heading {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin: 0 0 22px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #eee7e5;
+    color: #626262;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.student-module-page .student-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin: 0 0 22px;
+}
+
+.student-module-page .student-detail-grid>div {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid #eee8e6;
+    border-radius: 10px;
+    background: #fcfaf9;
+}
+
+.student-module-page .student-detail-grid dt {
+    margin: 0 0 6px;
+    color: #777;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: .055em;
+    line-height: 1.4;
+    text-transform: uppercase;
+}
+
+.student-module-page .student-detail-grid dd {
+    margin: 0;
+    color: #242424;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+}
+
+.student-module-page .student-detail-section {
+    margin: 0;
+    padding: 20px 0;
+    border-top: 1px solid #eee7e5;
+}
+
+.student-module-page .student-detail-section h3 {
+    margin: 0 0 10px;
+    color: var(--wis-maroon-dark, #6f1717);
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.student-module-page .student-detail-section p {
+    margin: 0;
+    color: #343434;
+    font-size: 14px;
+    line-height: 1.75;
+    overflow-wrap: anywhere;
+}
+
+.student-module-page .student-detail-section p+p {
+    margin-top: 10px;
+}
+
+.student-module-page .student-detail-section ul {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+    padding-left: 20px;
+    color: #343434;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.student-module-page .student-detail-section li {
+    padding-left: 2px;
+}
+
+.student-module-page .student-detail-section small {
+    display: block;
+    margin-top: 6px;
+    color: #777;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.student-module-page .student-detail-section .status-pill {
+    vertical-align: middle;
+}
+
+.student-module-page .student-detail-section .management-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 36px;
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--wis-maroon, #8b1e1e);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.student-module-page .student-detail-section .management-link:hover {
+    background: var(--wis-maroon-dark, #6f1717);
+    text-decoration: none;
+}
+
+.student-module-page .student-detail-section.student-event-notice {
+    margin-top: 8px;
+    padding: 16px;
+    border: 1px solid #f0d9a1;
+    border-left: 4px solid #c58a19;
+    border-radius: 9px;
+    background: #fff9e9;
+}
+
+.student-module-page .student-detail-section.student-event-notice h3 {
+    color: #795900;
+}
+
+.student-module-page .student-detail-section.student-event-notice p {
+    color: #5e4a20;
+}
+
+@media (max-width: 700px) {
+    .student-module-page>.section-heading {
+        align-items: flex-start;
+    }
+
+    .student-module-page>.section-heading .management-link {
+        min-height: 35px;
+    }
+
+    .student-module-page .student-event-detail {
+        padding: 16px;
+        border-radius: 11px;
+    }
+
+    .student-module-page .student-schedule-heading {
+        margin-bottom: 16px;
+        padding-bottom: 14px;
+    }
+
+    .student-module-page .student-detail-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .student-module-page .student-detail-grid>div {
+        padding: 12px 13px;
+    }
+
+    .student-module-page .student-detail-grid dd {
+        font-size: 14px;
+    }
+
+    .student-module-page .student-detail-section {
+        padding: 16px 0;
+    }
+
+    .student-module-page .student-detail-section h3 {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 420px) {
+    .student-module-page>.section-heading {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .student-module-page>.section-heading .management-link {
+        align-self: flex-start;
+    }
+}

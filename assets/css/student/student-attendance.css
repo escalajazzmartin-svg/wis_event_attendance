@@ -1,0 +1,204 @@
+.student-barcode-card {
+    display: grid;
+    justify-items: center;
+    gap: 14px;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 28px;
+    text-align: center;
+}
+
+.student-barcode-card svg {
+    width: min(100%, 650px);
+    height: auto;
+    padding: 10px;
+    background: #fff;
+}
+
+.student-barcode-fallback {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    color: #555;
+    font-family: monospace;
+}
+
+/* Attendance page layout */
+.student-module-page {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.student-module-page>.section-heading {
+    margin-bottom: 0;
+}
+
+/* Attendance summary cards */
+.student-attendance-stats,
+.student-attendance-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.student-attendance-stats>div,
+.student-attendance-summary>div {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px;
+    border: 1px solid #e5e2df;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.student-attendance-stats dt,
+.student-attendance-summary dt {
+    color: #555;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.student-attendance-stats dd,
+.student-attendance-summary dd {
+    margin: 0;
+    color: var(--wis-maroon, #8B1E1E);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+/* Attendance records panel */
+.student-content-panel {
+    min-width: 0;
+    padding: 22 0 0px;
+    border: none;
+    border-radius: 12px;
+    background: none;
+}
+
+.student-content-panel>.section-heading {
+    margin-bottom: 18px;
+}
+
+.student-content-panel .student-table-wrap {
+    overflow-x: auto;
+    border-radius: 9px;
+    background: #fff;
+}
+
+.student-content-panel .student-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.student-content-panel .student-table th,
+.student-content-panel .student-table td {
+    padding: 14px;
+    border-bottom: 1px solid #ece8e4;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.student-content-panel .student-table th {
+    background: var(--wis-maroon);
+    color: #ffffff;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.student-content-panel .student-table td {
+    font-size: 14px;
+}
+
+.student-content-panel .student-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.student-content-panel .student-table td a {
+    color: var(--wis-maroon, #8B1E1E);
+    font-weight: 600;
+}
+
+.student-content-panel .status-pill {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 20px;
+    background: #f5f5f5;
+    color: var(--wis-maroon, #8B1E1E);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Responsive layout */
+@media (max-width: 900px) {
+
+    .student-attendance-stats,
+    .student-attendance-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .student-module-page {
+        gap: 16px;
+    }
+
+    .student-content-panel {
+        padding: 14px;
+    }
+
+    .student-module-page>.section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
+/* View My Barcode button */
+.student-module-page>.section-heading>a.management-button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 8px 13px;
+    border: 1px solid #e3d2d2;
+    border-radius: 8px;
+    color: var(--wis-maroon, #8b1e1e);
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background .15s ease, border-color .15s ease;
+}
+
+.student-module-page>.section-heading>a.management-button::after {
+    content: "\f061";
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 14px;
+    transition: transform 0.2s ease;
+}
+
+.student-module-page>.section-heading>a.management-button:hover {
+    background: #faf3f3;
+    border-color: #cfaeae;
+    text-decoration: none;
+}
+
+.student-module-page>.section-heading>a.management-button:hover::after {
+    transform: translateX(4px);
+}
+
+.student-module-page>.section-heading>a.management-button:focus-visible {
+    outline: 3px solid #e5c46a;
+    outline-offset: 3px;
+}
+
+@media (max-width: 600px) {
+    .student-module-page>.section-heading>a.management-button {
+        align-self: stretch;
+        width: 100%;
+        box-sizing: border-box;
+    }
+}

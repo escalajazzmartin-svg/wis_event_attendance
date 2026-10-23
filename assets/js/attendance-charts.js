@@ -294,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const allOption = document.createElement('option');
             allOption.value = 'all';
-            allOption.textContent = 'All Academic Periods';
+            allOption.textContent = 'All';
 
             academicPeriodFilter.appendChild(allOption);
 

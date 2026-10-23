@@ -1,6 +1,7 @@
 <?php
 
 $studentPageTitle = 'Attendance History';
+$studentPageCss = 'student-attendance.css';
 require_once __DIR__ . '/../../includes/student_context.php';
 
 $academicYear = is_string($_GET['academic_year'] ?? null) ? trim($_GET['academic_year']) : '';
@@ -86,7 +87,10 @@ $query = http_build_query(array_filter([
 
 <section class="dashboard-section student-module-page">
     <div class="section-heading">
-        <div><h2>Attendance History</h2><p>Filter your recorded attendance by semester and academic year.</p></div>
+        <div>
+            <h2>Attendance History</h2>
+            <p>Filter your recorded attendance by semester and academic year.</p>
+        </div>
         <div class="student-report-actions">
             <a class="management-button management-button-secondary" href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/history.php?<?= studentEscape($query) ?>&amp;export=csv">Export CSV</a>
             <button class="management-button" type="button" onclick="window.print()">Print</button>
@@ -94,21 +98,34 @@ $query = http_build_query(array_filter([
     </div>
     <form class="student-filter-form" method="get" action="<?= studentEscape($studentBaseUrl) ?>/student/attendance/history.php">
         <label for="academic-year">Academic year</label>
-        <select id="academic-year" name="academic_year"><option value="">All years</option>
+        <select id="academic-year" name="academic_year">
+            <option value="">All years</option>
             <?php foreach ($validYears as $year): ?><option value="<?= studentEscape($year) ?>" <?= $academicYear === $year ? 'selected' : '' ?>><?= studentEscape($year) ?></option><?php endforeach; ?>
         </select>
         <label for="semester">Semester</label>
-        <select id="semester" name="semester"><option value="">All semesters</option>
+        <select id="semester" name="semester">
+            <option value="">All semesters</option>
             <?php foreach ($validSemesters as $semesterOption): ?><option value="<?= studentEscape($semesterOption) ?>" <?= $semester === $semesterOption ? 'selected' : '' ?>><?= studentEscape($semesterOption) ?></option><?php endforeach; ?>
         </select>
         <button class="management-button" type="submit">Apply filters</button>
     </form>
     <?php if ($records === []): ?>
-        <div class="student-content-panel empty-state"><strong>No attendance history found</strong><p>No personal records match these academic-period filters.</p></div>
+        <div class="student-content-panel empty-state"><strong>No attendance history found</strong>
+            <p>No personal records match these academic-period filters.</p>
+        </div>
     <?php else: ?>
         <div class="student-content-panel student-table-wrap">
             <table class="student-table">
-                <thead><tr><th scope="col">Event</th><th scope="col">Date</th><th scope="col">Academic period</th><th scope="col">Status</th><th scope="col">Check-in</th><th scope="col">Appeal</th></tr></thead>
+                <thead>
+                    <tr>
+                        <th scope="col">Event</th>
+                        <th scope="col">Date</th>
+                        <th scope="col">Academic period</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Check-in</th>
+                        <th scope="col">Appeal</th>
+                    </tr>
+                </thead>
                 <tbody>
                     <?php foreach ($records as $record): ?>
                         <tr>
@@ -136,4 +153,5 @@ $query = http_build_query(array_filter([
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 </main>
 </body>
+
 </html>

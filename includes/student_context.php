@@ -7,7 +7,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
 
-$studentRole = strtolower(trim($_SESSION['role_name'] ?? $_SESSION['role'] ?? ''));
+$studentRole = strtolower(trim(
+    $_SESSION['role_name'] ?? $_SESSION['role'] ?? ''
+));
+
 if (empty($_SESSION['user_id']) || $studentRole !== 'student') {
     header('Location: ' . BASE_URL . '/auth/student-login.php');
     exit;
@@ -23,6 +26,7 @@ $studentStmt = $pdo->prepare(
      WHERE s.user_id = ?
      LIMIT 1'
 );
+
 $studentStmt->execute([$_SESSION['user_id']]);
 $studentProfile = $studentStmt->fetch(PDO::FETCH_ASSOC);
 
@@ -92,14 +96,19 @@ function studentParticipantCondition(string $eventAlias = 'e'): string
     )";
 }
 
-function studentDateTime(?string $value, string $format = 'M j, Y · g:i A'): string
-{
+function studentDateTime(
+    ?string $value,
+    string $format = 'M j, Y · g:i A'
+): string {
     if (!$value) {
         return 'Not available';
     }
 
     $timestamp = strtotime($value);
-    return $timestamp === false ? 'Not available' : date($format, $timestamp);
+
+    return $timestamp === false
+        ? 'Not available'
+        : date($format, $timestamp);
 }
 
 function studentCharacterLength(string $value): int
@@ -107,7 +116,9 @@ function studentCharacterLength(string $value): int
     if (function_exists('mb_strlen')) {
         return mb_strlen($value, 'UTF-8');
     }
+
     $length = preg_match_all('/./us', $value);
+
     return $length === false ? strlen($value) : $length;
 }
 
@@ -115,45 +126,82 @@ function studentName(array $profile): string
 {
     return trim(
         $profile['first_name'] . ' ' .
-        ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') .
-        $profile['last_name']
+            ($profile['middle_name'] ? $profile['middle_name'] . ' ' : '') .
+            $profile['last_name']
     );
 }
 
 function studentStoreEvidenceUpload(array $file): ?string
 {
-    if (!isset($file['error']) || $file['error'] === UPLOAD_ERR_NO_FILE) {
+    if (
+        !isset($file['error']) ||
+        $file['error'] === UPLOAD_ERR_NO_FILE
+    ) {
         return null;
     }
+
     if ($file['error'] !== UPLOAD_ERR_OK) {
-        throw new RuntimeException('The proof upload failed. Choose the file again and retry.');
+        throw new RuntimeException(
+            'The proof upload failed. Choose the file again and retry.'
+        );
     }
-    if (!isset($file['tmp_name'], $file['size']) || !is_uploaded_file($file['tmp_name'])) {
-        throw new RuntimeException('The proof upload could not be verified.');
+
+    if (
+        !isset($file['tmp_name'], $file['size']) ||
+        !is_uploaded_file($file['tmp_name'])
+    ) {
+        throw new RuntimeException(
+            'The proof upload could not be verified.'
+        );
     }
-    if ((int) $file['size'] < 1 || (int) $file['size'] > 5 * 1024 * 1024) {
-        throw new RuntimeException('Supporting proof must be no larger than 5 MB.');
+
+    if (
+        (int) $file['size'] < 1 ||
+        (int) $file['size'] > 5 * 1024 * 1024
+    ) {
+        throw new RuntimeException(
+            'Supporting proof must be no larger than 5 MB.'
+        );
     }
 
     $finfo = new finfo(FILEINFO_MIME_TYPE);
     $mimeType = $finfo->file($file['tmp_name']);
+
     $extensions = [
         'application/pdf' => 'pdf',
         'image/jpeg' => 'jpg',
         'image/png' => 'png',
     ];
+
     if (!is_string($mimeType) || !isset($extensions[$mimeType])) {
-        throw new RuntimeException('Proof must be a PDF, JPG, or PNG file.');
+        throw new RuntimeException(
+            'Proof must be a PDF, JPG, or PNG file.'
+        );
     }
 
-    $directory = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'student-appeals';
-    if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
-        throw new RuntimeException('The server could not prepare secure evidence storage.');
+    $directory = dirname(__DIR__)
+        . DIRECTORY_SEPARATOR . 'uploads'
+        . DIRECTORY_SEPARATOR . 'student-appeals';
+
+    if (
+        !is_dir($directory) &&
+        !mkdir($directory, 0750, true) &&
+        !is_dir($directory)
+    ) {
+        throw new RuntimeException(
+            'The server could not prepare secure evidence storage.'
+        );
     }
-    $filename = bin2hex(random_bytes(24)) . '.' . $extensions[$mimeType];
+
+    $filename = bin2hex(random_bytes(24))
+        . '.' . $extensions[$mimeType];
+
     $destination = $directory . DIRECTORY_SEPARATOR . $filename;
+
     if (!move_uploaded_file($file['tmp_name'], $destination)) {
-        throw new RuntimeException('The server could not store the uploaded proof.');
+        throw new RuntimeException(
+            'The server could not store the uploaded proof.'
+        );
     }
 
     return 'uploads/student-appeals/' . $filename;
@@ -162,22 +210,33 @@ function studentStoreEvidenceUpload(array $file): ?string
 function studentEvidenceFilePath(string $storedPath): ?string
 {
     $basename = basename(str_replace('\\', '/', $storedPath));
+
     if (!preg_match('/\A[a-f0-9]{48}\.(pdf|jpg|png)\z/', $basename)) {
         return null;
     }
+
     $directory = realpath(
-        dirname(__DIR__) . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'student-appeals'
+        dirname(__DIR__)
+            . DIRECTORY_SEPARATOR . 'uploads'
+            . DIRECTORY_SEPARATOR . 'student-appeals'
     );
+
     if ($directory === false) {
         return null;
     }
+
     $file = realpath($directory . DIRECTORY_SEPARATOR . $basename);
+
     if (
         $file === false ||
-        !str_starts_with(strtolower($file), strtolower($directory . DIRECTORY_SEPARATOR)) ||
+        !str_starts_with(
+            strtolower($file),
+            strtolower($directory . DIRECTORY_SEPARATOR)
+        ) ||
         !is_file($file)
     ) {
         return null;
     }
+
     return $file;
 }
