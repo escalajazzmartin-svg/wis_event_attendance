@@ -1,0 +1,272 @@
+/* Department Head Reports & Analytics — shares the Student Reports visual language. */
+.dh-report-page {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+.dh-report-page > .section-heading {
+    align-items: center;
+    margin-bottom: 0;
+    gap: 18px;
+}
+
+.dh-report-page .section-heading h2 {
+    margin: 0;
+}
+
+.dh-report-page .section-heading p {
+    margin-top: 6px;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.dh-report-scope {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 14px 17px;
+    border: 1px solid #e8e2df;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.dh-report-scope > span {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 9px;
+    background: #f7eded;
+    color: var(--wis-maroon, #8B1E1E);
+    font-size: 17px;
+}
+
+.dh-report-scope strong,
+.dh-report-scope small {
+    display: block;
+}
+
+.dh-report-scope strong {
+    color: #292525;
+    font-size: 14px;
+}
+
+.dh-report-scope small {
+    margin-top: 3px;
+    color: #777;
+    font-size: 13px;
+}
+
+.dh-report-page .student-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.dh-report-page .student-summary-card {
+    min-height: 132px;
+}
+
+.dh-report-page .dh-status-present > strong {
+    color: #237a4b;
+}
+
+.dh-report-page .dh-status-late > strong {
+    color: #9a6500;
+}
+
+.dh-report-page .dh-status-absent > strong {
+    color: #b42332;
+}
+
+.dh-report-page .dh-status-excused > strong {
+    color: #5267a8;
+}
+
+.dh-report-panel {
+    padding-top: 20px;
+}
+
+.dh-report-panel > .section-heading {
+    margin-bottom: 16px;
+}
+
+.dh-report-page .dh-report-filter {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 0 0 6px !important;
+    padding: 5px 0 0;
+}
+
+.dh-filter-field {
+    display: flex;
+    flex: 1 1 190px;
+    flex-direction: column;
+    gap: 7px;
+    min-width: 155px;
+}
+
+.dh-filter-field label {
+    color: #555;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.dh-filter-field select {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border: 1px solid #d5d5d5;
+    border-radius: 7px;
+    background: #fff;
+    color: #292525;
+    font: inherit;
+}
+
+.dh-clear-filters {
+    align-self: center;
+    padding: 10px 2px;
+    white-space: nowrap;
+}
+
+.dh-report-page .student-table th {
+    white-space: nowrap;
+}
+
+.dh-report-page .student-table td {
+    min-width: 68px;
+}
+
+.dh-report-page .student-table td:first-child {
+    min-width: 190px;
+}
+
+.dh-event-venue {
+    display: block;
+    margin-top: 4px;
+    color: #777;
+    font-size: 12px;
+    font-weight: 400;
+}
+
+.dh-rate-value {
+    color: var(--wis-maroon, #8B1E1E);
+    white-space: nowrap;
+}
+
+.dh-rate-pending {
+    color: #777;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.dh-report-page .status-pill {
+    white-space: nowrap;
+}
+
+.dh-report-page .status-pill.status-pending {
+    background: #fff4d6;
+    color: #865e00;
+}
+
+.dh-report-page .status-pill.status-approved {
+    background: #e8f4ec;
+    color: #237a4b;
+}
+
+.dh-report-page .status-pill.status-completed {
+    background: #e9efff;
+    color: #35549b;
+}
+
+.dh-report-page .status-pill.status-rejected,
+.dh-report-page .status-pill.status-cancelled {
+    background: #fae9e9;
+    color: #a52b35;
+}
+
+.dh-report-page .status-pill.status-cancellation_requested {
+    background: #fff0e4;
+    color: #9a4d14;
+}
+
+.dh-report-page .empty-state {
+    padding: 28px 18px;
+    border: 1px dashed #ded7d3;
+    border-radius: 9px;
+    background: #fff;
+    text-align: center;
+}
+
+.dh-report-page .empty-state strong {
+    display: block;
+    color: #383232;
+}
+
+.dh-report-page .empty-state p {
+    margin-top: 6px;
+    color: #777;
+    font-size: 14px;
+}
+
+@media (max-width: 1050px) {
+    .dh-report-page .student-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 700px) {
+    .dh-report-page > .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .dh-report-actions {
+        width: 100%;
+    }
+
+    .dh-report-page .student-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .dh-report-page .student-summary-card {
+        padding: 16px;
+        min-height: 118px;
+    }
+
+    .dh-report-page .student-summary-card > strong {
+        font-size: 26px;
+    }
+
+    .dh-report-scope {
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 440px) {
+    .dh-report-page .student-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dh-filter-field {
+        flex-basis: 100%;
+    }
+}
+
+@media print {
+    .dh-report-page .dh-report-actions,
+    .dh-report-page .dh-report-filter,
+    .dashboard-footer {
+        display: none !important;
+    }
+
+    .dh-report-page .student-content-panel {
+        break-inside: avoid;
+    }
+}

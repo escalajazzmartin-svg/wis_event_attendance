@@ -15,6 +15,12 @@ $pageTitle = $pageTitle ?? 'Department Head';
     <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/style.css">
     <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/header.css">
     <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/department-head.css">
+    <?php if (!empty($pageUseStudentReportsCss)): ?>
+        <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/student/student-reports.css">
+    <?php endif; ?>
+    <?php if (!empty($pageCss)): ?>
+        <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/<?= dhEscape($pageCss) ?>">
+    <?php endif; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 </head>
 
