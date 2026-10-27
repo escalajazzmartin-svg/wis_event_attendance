@@ -1117,7 +1117,7 @@ require_once __DIR__ . '/../../includes/department_head_layout_start.php';
 
                                         <h2>Event Attendance Report</h2>
 
-                                        <p><?= count($eventRows) ?> matching <?= count($eventRows) === 1 ? 'event' : 'events' ?>.  rate is (Present + Late) divided by (eligible students minus Excused). Excused students are excluded from the rate denominator. Missing check-ins count as absent only after an event is completed or an approved event has ended; cancelled and rejected events are excluded from attendance analytics.</p>
+                                        <p><?= count($eventRows) ?> matching <?= count($eventRows) === 1 ? 'event' : 'events' ?>. Attendance rate is (Present + Late) divided by (eligible students minus Excused). Excused students are excluded from the rate denominator. Missing check-ins count as absent only after an event is completed or an approved event has ended; cancelled and rejected events are excluded from attendance analytics.</p>
 
                               </div>
 
