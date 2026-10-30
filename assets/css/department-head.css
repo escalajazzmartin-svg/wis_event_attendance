@@ -19,7 +19,7 @@ body.department-head-dashboard-page {
     padding: 0;
     background: var(--wis-background);
     color: var(--wis-black);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
 }
 
 .portal-label {
@@ -1064,7 +1064,7 @@ body.department-head-dashboard-page {
     box-sizing: border-box;
     background: var(--wis-background);
     color: var(--wis-black);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
 }
 
 .department-head-dashboard-page .dashboard-main>\* {
@@ -1943,4 +1943,52 @@ a.department-stat-card>div {
         grid-column: auto;
         margin-bottom: 0;
     }
+}
+
+/* QR camera scanner (department-head/attendance/scan.php) */
+.qr-camera {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    max-width: 700px;
+    margin-top: 20px;
+}
+
+.qr-camera-view {
+    position: relative;
+    width: min(100%, 420px);
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border: 1px solid #ebe5e0;
+    border-radius: 14px;
+    background: #171717;
+}
+
+.qr-camera-view[hidden] {
+    display: none;
+}
+
+.qr-camera-view video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.qr-camera-frame {
+    position: absolute;
+    inset: 18%;
+    border: 3px solid #f2c300;
+    border-radius: 12px;
+    box-shadow: 0 0 0 999px rgb(0 0 0 / 28%);
+    pointer-events: none;
+}
+
+.qr-camera-status {
+    margin: 0;
+    color: #555;
+    font-size: 14px;
+}
+
+.qr-camera-actions .management-button {
+    width: auto;
 }

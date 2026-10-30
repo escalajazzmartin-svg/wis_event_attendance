@@ -54,10 +54,10 @@ try {
         throw new RuntimeException('The selected account role is not configured.');
     }
     $insertUser = $pdo->prepare(
-        "INSERT INTO users (username, email, password_hash, role, account_status, role_id)
-         VALUES (?, ?, ?, ?, 'active', ?)"
+        "INSERT INTO users (username, email, password_hash, account_status, role_id)
+         VALUES (?, ?, ?, 'active', ?)"
     );
-    $insertUser->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT), $role, $roleId]);
+    $insertUser->execute([$username, $email, password_hash($password, PASSWORD_DEFAULT), $roleId]);
     $userId = (int) $pdo->lastInsertId();
     if ($role === 'student') {
         $stmt = $pdo->prepare(
@@ -100,4 +100,4 @@ try {
     throw $e;
 }
 
-adminRedirect('/admin/students/index.php', ['notice' => 'user_created']);
+adminRedirect($role === 'department_head' ? '/admin/department-heads/index.php' : '/admin/students/index.php', ['notice' => 'user_created']);

@@ -1,149 +1,102 @@
 <?php
 
-$adminPageTitle = 'Department Management';
+$adminPageTitle = 'Departments';
 require_once __DIR__ . '/../../includes/admin_layout_start.php';
+require_once __DIR__ . '/../../includes/admin_lists.php';
+
+const DEPARTMENTS_PER_PAGE = 10;
 
 $search = trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : '');
-$statusFilter = $_GET['status'] ?? '';
-if (!is_string($statusFilter) || !in_array($statusFilter, ['active', 'inactive'], true)) {
-    $statusFilter = '';
-}
+$statusFilter = is_string($_GET['status'] ?? null) && in_array($_GET['status'], ['active', 'inactive'], true) ? $_GET['status'] : '';
+[$page, $offset] = adminPage(DEPARTMENTS_PER_PAGE);
 
-$sql = "
-    SELECT d.department_id, d.department_code, d.department_name,
-           d.description, d.is_active, d.department_head_can_edit,
-           d.department_head_can_edit_attendance,
-           COUNT(DISTINCT dh.department_head_id) AS head_count,
-           GROUP_CONCAT(
-               DISTINCT CONCAT_WS(' ', dh.first_name, dh.middle_name, dh.last_name)
-               ORDER BY dh.last_name, dh.first_name
-               SEPARATOR ', '
-           ) AS department_heads,
-           COUNT(DISTINCT s.student_id) AS student_count,
-           COUNT(DISTINCT e.event_id) AS event_count,
-           COUNT(DISTINCT ea.attendance_id) AS attendance_count
-    FROM departments d
-    LEFT JOIN department_heads dh ON dh.department_id = d.department_id
-    LEFT JOIN students s ON s.department_id = d.department_id
-    LEFT JOIN events e ON e.department_id = d.department_id
-    LEFT JOIN event_attendance ea ON ea.event_id = e.event_id
-    WHERE 1 = 1";
+$where = '1 = 1';
 $params = [];
-
 if ($search !== '') {
-    $sql .= ' AND (d.department_name LIKE :search_name OR d.department_code LIKE :search_code OR d.description LIKE :search_description)';
-    $searchTerm = '%' . $search . '%';
-    $params = [
-        'search_name' => $searchTerm,
-        'search_code' => $searchTerm,
-        'search_description' => $searchTerm,
-    ];
+    $where .= ' AND (d.department_name LIKE :q_name OR d.department_code LIKE :q_code OR d.description LIKE :q_description)';
+    $params = ['q_name' => '%' . $search . '%', 'q_code' => '%' . $search . '%', 'q_description' => '%' . $search . '%'];
 }
-
 if ($statusFilter !== '') {
-    $sql .= ' AND d.is_active = :is_active';
+    $where .= ' AND d.is_active = :is_active';
     $params['is_active'] = $statusFilter === 'active' ? 1 : 0;
 }
 
-$sql .= ' GROUP BY d.department_id, d.department_code, d.department_name,
-                   d.description, d.is_active, d.department_head_can_edit,
-                   d.department_head_can_edit_attendance
-          ORDER BY d.department_name';
-$stmt = $pdo->prepare($sql);
+$countStmt = $pdo->prepare("SELECT COUNT(*) FROM departments d WHERE $where");
+$countStmt->execute($params);
+$total = (int) $countStmt->fetchColumn();
+[$page, $offset] = adminClampPage($page, DEPARTMENTS_PER_PAGE, $total);
+
+$stmt = $pdo->prepare(
+    "SELECT d.department_id, d.department_code, d.department_name, d.is_active,
+            (SELECT GROUP_CONCAT(CONCAT_WS(' ', dh.first_name, dh.middle_name, dh.last_name)
+                                 ORDER BY dh.last_name, dh.first_name SEPARATOR ', ')
+               FROM department_heads dh WHERE dh.department_id = d.department_id) AS department_heads,
+            (SELECT COUNT(*) FROM students s WHERE s.department_id = d.department_id) AS student_count
+     FROM departments d
+     WHERE $where
+     ORDER BY d.department_name
+     LIMIT " . DEPARTMENTS_PER_PAGE . ' OFFSET ' . $offset
+);
 $stmt->execute($params);
 $departments = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$summary = $pdo->query(
-    "SELECT COUNT(*) AS total,
-            SUM(is_active = 1) AS active,
-            SUM(is_active = 0) AS inactive
-     FROM departments"
-)->fetch(PDO::FETCH_ASSOC);
-$totalStudents = (int) $pdo->query('SELECT COUNT(*) FROM students')->fetchColumn();
-$totalHeads = (int) $pdo->query('SELECT COUNT(*) FROM department_heads')->fetchColumn();
-$permissionNotice = ($_GET['notice'] ?? '') === 'permission_updated';
+$notice = match ($_GET['notice'] ?? '') {
+    'department_created' => 'Department added.',
+    'department_updated' => 'Department details saved.',
+    'department_archived' => 'Department archived.',
+    'department_restored' => 'Department restored.',
+    default => '',
+};
 ?>
 
-<section class="admin-content-section">
-    <div class="admin-page-heading">
+<section class="ad-page">
+    <header class="ad-head">
         <div>
-            <span class="admin-eyebrow">School structure</span>
-            <h2>Department Management</h2>
-            <p>Manage departments, assignments, event totals, and attendance records.</p>
+            <h1>Departments</h1>
+            <p>Academic departments and their assigned heads.</p>
         </div>
-        <a class="admin-filter-button admin-button-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/create.php">Add department</a>
-    </div>
+        <div class="ad-head-actions">
+            <a class="ad-btn ad-btn-solid" href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/create.php"><?= adminIcon('plus') ?>Add department</a>
+        </div>
+    </header>
 
-    <?php if ($permissionNotice): ?>
-        <div class="admin-panel admin-permission-notice" role="status">
-            Department Head permissions were updated.
-        </div>
+    <?php if ($notice !== ''): ?>
+        <div class="ad-notice" role="status"><?= adminEscape($notice) ?></div>
     <?php endif; ?>
 
-    <div class="admin-summary-grid">
-        <article class="admin-summary-card">
-            <span class="admin-summary-icon"><i class="fa-solid fa-building" aria-hidden="true"></i></span>
-            <div><span>Total departments</span><strong><?= (int) $summary['total'] ?></strong></div>
-        </article>
-        <article class="admin-summary-card">
-            <span class="admin-summary-icon admin-icon-green"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-            <div><span>Active departments</span><strong><?= (int) $summary['active'] ?></strong></div>
-        </article>
-        <article class="admin-summary-card">
-            <span class="admin-summary-icon admin-icon-blue"><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i></span>
-            <div><span>Students assigned</span><strong><?= $totalStudents ?></strong></div>
-        </article>
-        <article class="admin-summary-card">
-            <span class="admin-summary-icon admin-icon-gold"><i class="fa-solid fa-user-tie" aria-hidden="true"></i></span>
-            <div><span>Department heads</span><strong><?= $totalHeads ?></strong></div>
-        </article>
-    </div>
-
-    <section class="admin-panel">
-        <div class="admin-panel-heading">
-            <div>
-                <h3>Departments</h3>
-                <p><?= count($departments) ?> matching <?= count($departments) === 1 ? 'department' : 'departments' ?></p>
-            </div>
-        </div>
-
-        <form class="admin-filters" method="get" action="<?= adminEscape($adminBaseUrl) ?>/admin/departments/index.php">
-            <label class="admin-search-field">
-                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+    <div class="ad-card">
+        <form class="ad-toolbar" method="get" action="<?= adminEscape($adminBaseUrl) ?>/admin/departments/index.php">
+            <label class="ad-search">
+                <?= adminIcon('search') ?>
                 <span class="visually-hidden">Search departments</span>
-                <input type="search" name="q" value="<?= adminEscape($search) ?>" placeholder="Search department name or code">
+                <input type="search" name="q" value="<?= adminEscape($search) ?>" placeholder="Search departments">
             </label>
             <label>
-                <span class="visually-hidden">Filter by department status</span>
-                <select name="status">
+                <span class="visually-hidden">Filter by status</span>
+                <select name="status" data-autosubmit>
                     <option value="">All statuses</option>
                     <option value="active" <?= $statusFilter === 'active' ? 'selected' : '' ?>>Active</option>
                     <option value="inactive" <?= $statusFilter === 'inactive' ? 'selected' : '' ?>>Inactive</option>
                 </select>
             </label>
-            <button class="admin-filter-button" type="submit">Filter</button>
-            <?php if ($search !== '' || $statusFilter !== ''): ?>
-                <a class="admin-reset-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/index.php">Clear</a>
-            <?php endif; ?>
+            <button class="visually-hidden" type="submit">Apply filters</button>
         </form>
 
         <?php if ($departments === []): ?>
-            <div class="admin-empty-state">
-                <i class="fa-solid fa-building-circle-exclamation" aria-hidden="true"></i>
-                <strong>No matching departments</strong>
-                <p>Try adjusting your search or filters.</p>
+            <div class="ad-empty">
+                <strong>No departments found</strong>
+                Try a different search or clear the filters.
             </div>
         <?php else: ?>
-            <div class="admin-table-wrap">
-                <table class="admin-table">
+            <div class="ad-table-wrap">
+                <table class="ad-table">
                     <thead>
                         <tr>
                             <th scope="col">Department</th>
+                            <th scope="col">Code</th>
                             <th scope="col">Department head</th>
                             <th scope="col">Students</th>
-                            <th scope="col">Events / attendance</th>
                             <th scope="col">Status</th>
-                            <th scope="col">Department Head permissions</th>
                             <th scope="col">Actions</th>
                         </tr>
                     </thead>
@@ -151,69 +104,16 @@ $permissionNotice = ($_GET['notice'] ?? '') === 'permission_updated';
                         <?php foreach ($departments as $department): ?>
                             <?php $isActive = (int) $department['is_active'] === 1; ?>
                             <tr>
-                                <td data-label="Department">
-                                    <div class="admin-department-cell">
-                                        <span class="admin-department-icon"><i class="fa-solid fa-building" aria-hidden="true"></i></span>
-                                        <span>
-                                            <strong><?= adminEscape($department['department_name']) ?></strong>
-                                            <small><?= adminEscape($department['department_code']) ?></small>
-                                            <?php if ($department['description']): ?>
-                                                <small><?= adminEscape($department['description']) ?></small>
-                                            <?php endif; ?>
-                                        </span>
-                                    </div>
-                                </td>
-                                <td data-label="Department head">
-                                    <?= adminEscape($department['department_heads'] ?: 'Not assigned') ?>
-                                    <?php if ((int) $department['head_count'] > 1): ?>
-                                        <small class="admin-cell-note"><?= (int) $department['head_count'] ?> heads assigned</small>
-                                    <?php endif; ?>
-                                </td>
-                                <td data-label="Students"><span class="admin-count-badge"><?= (int) $department['student_count'] ?></span></td>
-                                <td data-label="Events / attendance"><?= (int) $department['event_count'] ?> events · <?= (int) $department['attendance_count'] ?> records</td>
-                                <td data-label="Status">
-                                    <span class="admin-status-badge <?= $isActive ? 'admin-status-active' : 'admin-status-inactive' ?>">
-                                        <i class="fa-solid fa-circle" aria-hidden="true"></i>
-                                        <?= $isActive ? 'Active' : 'Inactive' ?>
-                                    </span>
-                                </td>
-                                <td data-label="Department Head permissions">
-                                    <div class="admin-permission-controls">
-                                        <?php foreach (
-                                            [
-                                                'department' => [
-                                                    'label' => 'Edit department details',
-                                                    'enabled' => (int) $department['department_head_can_edit'] === 1,
-                                                ],
-                                                'attendance' => [
-                                                    'label' => 'Correct attendance',
-                                                    'enabled' => (int) $department['department_head_can_edit_attendance'] === 1,
-                                                ],
-                                            ] as $permission => $permissionData
-                                        ): ?>
-                                            <form method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/department-heads/permissions.php">
-                                                <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
-                                                <input type="hidden" name="department_id" value="<?= (int) $department['department_id'] ?>">
-                                                <input type="hidden" name="permission" value="<?= adminEscape($permission) ?>">
-                                                <input type="hidden" name="enabled" value="<?= $permissionData['enabled'] ? '0' : '1' ?>">
-                                                <span><?= adminEscape($permissionData['label']) ?>: <?= $permissionData['enabled'] ? 'Allowed' : 'Read-only' ?></span>
-                                                <button class="admin-permission-button" type="submit">
-                                                    <?= $permissionData['enabled'] ? 'Revoke' : 'Allow' ?>
-                                                </button>
-                                            </form>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </td>
-                                <td data-label="Actions">
-                                    <div class="admin-row-actions">
-                                        <a href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/view.php?id=<?= (int) $department['department_id'] ?>">View members</a>
-                                        <a href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/edit.php?id=<?= (int) $department['department_id'] ?>">Edit</a>
-                                        <form method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/departments/status.php">
-                                            <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
-                                            <input type="hidden" name="department_id" value="<?= (int) $department['department_id'] ?>">
-                                            <input type="hidden" name="is_active" value="<?= $isActive ? '0' : '1' ?>">
-                                            <button type="submit"><?= $isActive ? 'Archive' : 'Restore' ?></button>
-                                        </form>
+                                <td class="ad-strong"><?= adminEscape($department['department_name']) ?></td>
+                                <td><?= adminEscape($department['department_code']) ?></td>
+                                <td><?= $department['department_heads'] ? adminEscape($department['department_heads']) : '<span class="ad-muted">Not assigned</span>' ?></td>
+                                <td><?= number_format((int) $department['student_count']) ?></td>
+                                <td><span class="ad-pill <?= $isActive ? 'ad-pill-green' : 'ad-pill-gray' ?>"><?= $isActive ? 'Active' : 'Inactive' ?></span></td>
+                                <td>
+                                    <div class="ad-actions">
+                                        <a class="ad-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/view.php?id=<?= (int) $department['department_id'] ?>">View</a>
+                                        <span class="sep" aria-hidden="true">·</span>
+                                        <a class="ad-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/departments/edit.php?id=<?= (int) $department['department_id'] ?>">Edit</a>
                                     </div>
                                 </td>
                             </tr>
@@ -222,8 +122,16 @@ $permissionNotice = ($_GET['notice'] ?? '') === 'permission_updated';
                 </table>
             </div>
         <?php endif; ?>
-    </section>
+
+        <?php adminListFooter($page, DEPARTMENTS_PER_PAGE, $total, count($departments), 'departments'); ?>
+    </div>
 </section>
+
+<script>
+document.querySelectorAll('[data-autosubmit]').forEach(function (select) {
+    select.addEventListener('change', function () { select.form.submit(); });
+});
+</script>
 
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 

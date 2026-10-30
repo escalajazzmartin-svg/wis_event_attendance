@@ -1,6 +1,7 @@
 <?php
 
 $adminPageTitle = 'Event Request Review';
+$adminPageCss = 'admin-event-view.css';
 require_once __DIR__ . '/../../includes/admin_layout_start.php';
 
 $eventId = filter_var($_GET['id'] ?? null, FILTER_VALIDATE_INT);
@@ -89,47 +90,138 @@ if ($changeRequestId !== false && $changeRequestId > 0) {
 }
 $status = $event['event_status'];
 $headName = trim($event['first_name'] . ' ' . ($event['middle_name'] ? $event['middle_name'] . ' ' : '') . $event['last_name']);
+
+$statusLabel = ucwords(str_replace('_', ' ', $status));
+$venueLabel = $event['venue'] ?: 'Not specified';
+$periodLabel = $event['academic_year'] . ' · ' . $event['semester'];
+$startLabel = date('M j, Y · g:i A', strtotime($event['start_at']));
+$endLabel = date('M j, Y · g:i A', strtotime($event['end_at']));
+$adminRemarks = trim((string) $event['admin_remarks']);
+$adminCancelReason = '';
+$cancelMarker = 'Administrator cancellation: ';
+if ($status === 'cancelled' && ($markerAt = strrpos($adminRemarks, $cancelMarker)) !== false) {
+    $adminCancelReason = trim(substr($adminRemarks, $markerAt + strlen($cancelMarker)));
+    $adminRemarks = trim(substr($adminRemarks, 0, $markerAt));
+}
+$exportHref = $adminBaseUrl . '/admin/events/export.php?' . http_build_query(['event_id' => $eventId, 'academic_period_id' => 'all']);
+$infoCell = static function (string $icon, string $label, string $valueHtml, string $id = ''): string {
+    return '<div class="ev-cell"' . ($id !== '' ? ' id="' . $id . '"' : '') . '><span class="ev-icon">' . adminIcon($icon) . '</span><div><span class="ev-label">'
+        . adminEscape($label) . '</span><div class="ev-value">' . $valueHtml . '</div></div></div>';
+};
+$dash = '—';
+$rosterStmt = $pdo->prepare(
+    'SELECT r.student_number, r.first_name, r.middle_name, r.last_name, r.year_level, r.section,
+            ea.attendance_status
+     FROM event_attendance_roster r
+     LEFT JOIN event_attendance ea ON ea.event_id = r.event_id AND ea.student_id = r.student_id
+     WHERE r.event_id = ?
+     ORDER BY r.last_name, r.first_name, r.student_id
+     LIMIT 500'
+);
+$rosterStmt->execute([$eventId]);
+$roster = $rosterStmt->fetchAll(PDO::FETCH_ASSOC);
+$reportHref = $adminBaseUrl . '/admin/reports/index.php?' . http_build_query([
+    'report' => 'attendance',
+    'department_id' => (int) $event['department_id'],
+    'academic_year' => $event['academic_year'],
+    'semester' => $event['semester'],
+]);
+$attendanceHref = $adminBaseUrl . '/admin/attendance/index.php?' . http_build_query(['event_id' => $eventId]);
 ?>
 
-<section class="admin-content-section">
-    <div class="admin-page-heading">
-        <div><span class="admin-eyebrow">Event review</span><h2><?= adminEscape($event['event_title']) ?></h2><p><?= adminEscape($event['department_name']) ?> · <?= adminEscape($headName) ?></p></div>
-        <a class="admin-action-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/index.php">Back to events</a>
-    </div>
-    <div class="admin-panel">
-        <p><span class="status-pill status-<?= adminEscape($status) ?>"><?= adminEscape(ucwords(str_replace('_', ' ', $status))) ?></span></p>
-        <dl class="admin-event-details">
-            <div><dt>Venue</dt><dd><?= adminEscape($event['venue'] ?: 'Not specified') ?></dd></div>
-            <div><dt>Academic period</dt><dd><?= adminEscape($event['academic_year']) ?> · <?= adminEscape($event['semester']) ?></dd></div>
-            <div><dt>Starts</dt><dd><?= adminEscape(date('M j, Y · g:i A', strtotime($event['start_at']))) ?></dd></div>
-            <div><dt>Ends</dt><dd><?= adminEscape(date('M j, Y · g:i A', strtotime($event['end_at']))) ?></dd></div>
-            <div class="admin-event-wide"><dt>Description</dt><dd><?= nl2br(adminEscape($event['event_description'] ?: 'No description provided.')) ?></dd></div>
-            <div class="admin-event-wide"><dt>Participants</dt><dd>
-                <?php if ($participants === []): ?>All department students<?php else: ?>
-                    <ul>
-                        <?php foreach ($participants as $participant): ?>
-                            <li>
-                                <?php if ($participant['participant_type'] === 'student'): ?>
-                                    <?= adminEscape(trim($participant['first_name'] . ' ' . ($participant['middle_name'] ? $participant['middle_name'] . ' ' : '') . $participant['last_name'])) ?> · <?= adminEscape($participant['student_number']) ?>
-                                <?php elseif ($participant['participant_type'] === 'year_level'): ?>
-                                    <?= adminEscape($participant['year_level']) ?> year level
-                                <?php else: ?>
-                                    <?= adminEscape($participant['year_level']) ?> · <?= adminEscape($participant['section']) ?>
-                                <?php endif; ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php endif; ?>
-            </dd></div>
-            <?php if ($event['admin_remarks']): ?><div class="admin-event-wide"><dt>Previous administrator remarks</dt><dd><?= nl2br(adminEscape($event['admin_remarks'])) ?></dd></div><?php endif; ?>
-            <?php if ($status === 'cancellation_requested'): ?>
-                <div class="admin-event-wide"><dt>Cancellation reason</dt><dd><?= nl2br(adminEscape($event['cancellation_request_remarks'] ?: 'No reason was supplied.')) ?></dd></div>
+<section class="ev-view">
+    <a class="ev-back" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/index.php"><?= adminIcon('arrow-left') ?>Back to events</a>
+
+    <header class="ev-head">
+        <div>
+            <h1><?= adminEscape($event['event_title']) ?></h1>
+            <p><?= adminEscape($event['department_name']) ?><?= $headName !== '' ? ' · ' . adminEscape($headName) : '' ?></p>
+        </div>
+        <div class="ev-head-actions">
+            <a class="ev-btn" href="<?= adminEscape($exportHref) ?>"><?= adminIcon('download') ?>Export CSV</a>
+            <?php if ($status === 'approved'): ?>
+                <a class="ev-btn ev-btn-solid" href="#cancel-remarks"><?= adminIcon('calendar-check') ?>Cancel Event</a>
             <?php endif; ?>
-        </dl>
+        </div>
+    </header>
+
+    <div class="ev-grid">
+        <div class="ev-main">
+            <section class="ev-card ev-overview">
+                <div class="ev-banner">
+                    <span class="ev-banner-icon"><?= adminIcon('calendar-check') ?></span>
+                    <div>
+                        <span class="status-pill status-<?= adminEscape($status) ?>"><?= adminEscape($statusLabel) ?></span>
+                        <span class="ev-banner-label">Venue</span>
+                        <span class="ev-banner-venue"><?= adminIcon('pin') ?><?= adminEscape($venueLabel) ?></span>
+                    </div>
+                </div>
+                <div class="ev-times">
+                    <?= $infoCell('calendar', 'Starts', adminEscape($startLabel)) ?>
+                    <?= $infoCell('calendar', 'Ends', adminEscape($endLabel)) ?>
+                    <?= $infoCell('cap', 'Academic period', adminEscape($periodLabel)) ?>
+                </div>
+                <div class="ev-detail-grid">
+                    <?= $infoCell('file', 'Description', nl2br(adminEscape($event['event_description'] ?: 'No description provided.'))) ?>
+                    <?= $infoCell('shield', 'Previous administrator remarks', $adminRemarks !== '' ? nl2br(adminEscape($adminRemarks)) : $dash) ?>
+                    <?php
+                    ob_start();
+                    if ($participants === []) {
+                        echo 'All department students';
+                    } else {
+                        echo '<ul>';
+                        foreach ($participants as $participant) {
+                            echo '<li>';
+                            if ($participant['participant_type'] === 'student') {
+                                echo adminEscape(trim($participant['first_name'] . ' ' . ($participant['middle_name'] ? $participant['middle_name'] . ' ' : '') . $participant['last_name'])) . ' · ' . adminEscape($participant['student_number']);
+                            } elseif ($participant['participant_type'] === 'year_level') {
+                                echo adminEscape($participant['year_level']) . ' year level';
+                            } else {
+                                echo adminEscape($participant['year_level']) . ' · ' . adminEscape($participant['section']);
+                            }
+                            echo '</li>';
+                        }
+                        echo '</ul>';
+                    }
+                    $participantsHtml = (string) ob_get_clean();
+                    ?>
+                    <?= $infoCell('users', 'Participants', $participantsHtml, 'participants') ?>
+                    <?php if ($status === 'cancellation_requested'): ?>
+                        <?= $infoCell('x-circle', 'Cancellation request reason', nl2br(adminEscape($event['cancellation_request_remarks'] ?: 'No reason was supplied.'))) ?>
+                    <?php else: ?>
+                        <?= $infoCell('x-circle', 'Administrator cancellation reason', $adminCancelReason !== '' ? nl2br(adminEscape($adminCancelReason)) : $dash) ?>
+                    <?php endif; ?>
+                </div>
+            </section>
+
+
+            <section class="ev-card ev-panel" id="registered-participants">
+                <h2 class="ev-panel-title"><?= adminIcon('users') ?>Registered Participants <span class="ev-count"><?= count($roster) ?></span></h2>
+                <?php if ($roster === []): ?>
+                    <p class="ev-empty">No registered participants yet. The roster is created for the event's eligible students.</p>
+                <?php else: ?>
+                    <div class="ev-roster-scroll" tabindex="0" role="region" aria-label="Registered participants, scrollable">
+                        <table class="ev-roster">
+                            <thead><tr><th>Student</th><th>Student no.</th><th>Year &amp; section</th><th>Attendance</th></tr></thead>
+                            <tbody>
+                            <?php foreach ($roster as $row): ?>
+                                <?php $rowStatus = $row['attendance_status'] ?: ''; ?>
+                                <tr>
+                                    <td><?= adminEscape(trim($row['first_name'] . ' ' . ($row['middle_name'] ? $row['middle_name'] . ' ' : '') . $row['last_name'])) ?></td>
+                                    <td><?= adminEscape($row['student_number']) ?></td>
+                                    <td><?= adminEscape(trim(($row['year_level'] ?? '') . ' ' . ($row['section'] ?? '')) ?: '—') ?></td>
+                                    <td><?php if ($rowStatus !== ''): ?><span class="admin-status-badge admin-status-<?= adminEscape($rowStatus) ?>"><?= adminEscape(ucfirst($rowStatus)) ?></span><?php else: ?><span class="ev-muted">Not recorded</span><?php endif; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </section>
 
         <?php if ($changeRequest && $changePayload): ?>
             <?php $requestedValues = $changePayload['values']; ?>
-            <section class="admin-change-request">
+            <section class="ev-card ev-panel admin-change-request">
                 <h3>Requested schedule changes</h3>
                 <p>Submitted by <?= adminEscape($changeRequest['requester']) ?> on <?= adminEscape(date('M j, Y · g:i A', strtotime($changeRequest['requested_at']))) ?> · <?= adminEscape(ucfirst($changeRequest['request_status'])) ?></p>
                 <?php if (is_string($changePayload['reason'] ?? null) && $changePayload['reason'] !== ''): ?><p><strong>Department Head reason:</strong> <?= nl2br(adminEscape($changePayload['reason'])) ?></p><?php endif; ?>
@@ -172,31 +264,59 @@ $headName = trim($event['first_name'] . ' ' . ($event['middle_name'] ? $event['m
             </section>
         <?php endif; ?>
 
+
         <?php if (in_array($status, ['pending', 'cancellation_requested'], true)): ?>
-            <form class="admin-event-review-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/events/action.php">
-                <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
-                <input type="hidden" name="event_id" value="<?= (int) $eventId ?>">
-                <label for="remarks">Administrator remarks (required)</label>
-                <textarea id="remarks" name="remarks" maxlength="2000" required rows="4"></textarea>
-                <div>
-                    <button class="admin-event-action" type="submit" name="decision" value="approved">
-                        <?= $status === 'pending' ? 'Approve event' : 'Approve cancellation' ?>
-                    </button>
-                    <button class="admin-event-action admin-event-action-secondary" type="submit" name="decision" value="rejected">
-                        <?= $status === 'pending' ? 'Reject event' : 'Decline cancellation' ?>
-                    </button>
-                </div>
-            </form>
+            <section class="ev-card ev-panel" id="review">
+                <h2 class="ev-panel-title"><?= adminIcon('shield') ?><?= $status === 'pending' ? 'Event Request Review' : 'Cancellation Request Review' ?></h2>
+                <form class="ev-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/events/action.php">
+                    <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
+                    <input type="hidden" name="event_id" value="<?= (int) $eventId ?>">
+                    <label class="visually-hidden" for="remarks">Administrator remarks (required)</label>
+                    <textarea id="remarks" name="remarks" maxlength="2000" required rows="3" placeholder="Enter administrator remarks (required)..."></textarea>
+                    <div class="ev-form-actions">
+                        <button class="ev-submit ev-submit-approve" type="submit" name="decision" value="approved"><?= $status === 'pending' ? 'Approve event' : 'Approve cancellation' ?></button>
+                        <button class="ev-submit ev-submit-danger" type="submit" name="decision" value="rejected"><?= $status === 'pending' ? 'Reject event' : 'Decline cancellation' ?></button>
+                    </div>
+                </form>
+            </section>
         <?php endif; ?>
+
         <?php if ($status === 'approved'): ?>
-            <form class="admin-event-review-form admin-direct-cancel-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/events/action.php" onsubmit="return confirm('Cancel this approved event now?');">
-                <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
-                <input type="hidden" name="event_id" value="<?= (int) $eventId ?>">
-                <label for="cancel-remarks">Administrator cancellation reason</label>
-                <textarea id="cancel-remarks" name="remarks" maxlength="2000" required rows="3"></textarea>
-                <button class="admin-event-action admin-event-action-secondary" type="submit" name="decision" value="cancel">Cancel event</button>
-            </form>
+            <section class="ev-card ev-panel">
+                <h2 class="ev-panel-title"><?= adminIcon('x-circle') ?>Administrator Cancellation Reason</h2>
+                <form class="ev-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/events/action.php" onsubmit="return confirm('Cancel this approved event now?');">
+                    <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
+                    <input type="hidden" name="event_id" value="<?= (int) $eventId ?>">
+                    <label class="visually-hidden" for="cancel-remarks">Administrator cancellation reason</label>
+                    <textarea id="cancel-remarks" name="remarks" maxlength="2000" required rows="3" placeholder="Enter reason for cancellation (required)..."></textarea>
+                    <button class="ev-submit ev-submit-cancel" type="submit" name="decision" value="cancel"><?= adminIcon('x-circle') ?>Cancel event</button>
+                </form>
+            </section>
         <?php endif; ?>
+        </div>
+
+        <aside class="ev-side">
+            <section class="ev-card ev-side-card">
+                <h2>Event Details</h2>
+                <dl class="ev-facts">
+                    <div><span class="ev-icon"><?= adminIcon('file') ?></span><div><dt>Event Title</dt><dd><?= adminEscape($event['event_title']) ?></dd></div></div>
+                    <div><span class="ev-icon"><?= adminIcon('building') ?></span><div><dt>Department</dt><dd class="ev-accent"><?= adminEscape($event['department_name']) ?></dd></div></div>
+                    <div><span class="ev-icon"><?= adminIcon('pin') ?></span><div><dt>Venue</dt><dd><?= adminEscape($venueLabel) ?></dd></div></div>
+                    <div><span class="ev-icon"><?= adminIcon('cap') ?></span><div><dt>Academic Period</dt><dd><?= adminEscape($periodLabel) ?></dd></div></div>
+                    <div><span class="ev-icon"><?= adminIcon('calendar') ?></span><div><dt>Starts</dt><dd><?= adminEscape($startLabel) ?></dd></div></div>
+                    <div><span class="ev-icon"><?= adminIcon('calendar') ?></span><div><dt>Ends</dt><dd><?= adminEscape($endLabel) ?></dd></div></div>
+                    <div><span class="ev-icon"><?= adminIcon('check') ?></span><div><dt>Status</dt><dd><span class="status-pill status-<?= adminEscape($status) ?>"><?= adminEscape($statusLabel) ?></span></dd></div></div>
+                </dl>
+            </section>
+            <section class="ev-card ev-side-card">
+                <h2>Quick Actions</h2>
+                <div class="ev-quick">
+                    <a class="ev-quick-btn ev-quick-solid" href="#registered-participants"><?= adminIcon('calendar-check') ?>View Registered Participants</a>
+                    <a class="ev-quick-btn" href="<?= adminEscape($attendanceHref) ?>"><?= adminIcon('user') ?>View Attendance Records</a>
+                    <a class="ev-quick-btn" href="<?= adminEscape($reportHref) ?>"><?= adminIcon('file') ?>View Reports</a>
+                </div>
+            </section>
+        </aside>
     </div>
 </section>
 

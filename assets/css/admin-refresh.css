@@ -1,0 +1,945 @@
+/* Refreshed look for admin Attendance, Reports and Security pages.
+   Scoped to .admin-refresh (main content only). The sidebar is not styled here. */
+.admin-refresh .admin-page-heading {
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #ebe5e0;
+}
+
+.admin-refresh .admin-eyebrow {
+    color: #8b1e1e;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+}
+
+.admin-refresh .admin-page-heading h2 {
+    color: #1a1a1a;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+}
+
+.admin-refresh .admin-page-heading p,
+.admin-refresh .admin-panel-heading p {
+    color: #5f5a56;
+    font-size: 15px;
+}
+
+.admin-refresh .admin-summary-grid {
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.admin-refresh .admin-summary-card {
+    padding: 20px;
+    border-color: #ebe5e0;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgb(60 30 20 / 6%);
+}
+
+.admin-refresh .admin-summary-icon {
+    border-radius: 12px;
+    background: #f7e3e3;
+    color: #8b1e1e;
+}
+
+.admin-refresh .admin-summary-icon.admin-icon-red {
+    background: #fde0e0;
+    color: #9b1c1c;
+}
+
+.admin-refresh .admin-summary-icon.admin-icon-green {
+    background: #e1f2e7;
+    color: #28764e;
+}
+
+.admin-refresh .admin-summary-icon.admin-icon-gold {
+    background: #f7efd8;
+    color: #92701f;
+}
+
+.admin-refresh .admin-summary-icon.admin-icon-blue {
+    background: #e5effa;
+    color: #2f6eaa;
+}
+
+.admin-refresh .admin-summary-card > div > span {
+    color: #5f5a56;
+    font-weight: 500;
+}
+
+.admin-refresh .admin-summary-card strong {
+    color: #1a1a1a;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+}
+
+.admin-refresh .admin-panel {
+    padding: 0;
+    margin-bottom: 24px;
+    overflow: hidden;
+    border-color: #ebe5e0;
+    border-radius: 14px;
+    box-shadow: 0 2px 8px rgb(60 30 20 / 6%);
+}
+
+.admin-refresh .admin-panel-heading {
+    margin: 0;
+    padding: 18px 24px;
+    border-bottom: 1px solid #ebe5e0;
+}
+
+.admin-refresh .admin-panel-heading h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #1a1a1a;
+    font-size: 16px;
+}
+
+.admin-refresh .admin-panel-heading p {
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.admin-refresh .admin-filters {
+    margin: 0;
+    padding: 16px 24px;
+    background: #faf7f4;
+    border-bottom: 1px solid #ebe5e0;
+}
+
+.admin-refresh .admin-table-wrap {
+    border: 0;
+    border-radius: 0;
+}
+
+.admin-refresh .admin-table th {
+    padding: 12px 24px;
+    background: #faf7f4;
+    border-bottom: 1px solid #ebe5e0;
+    color: #5f5a56;
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.admin-refresh .admin-table td {
+    padding: 14px 24px;
+    border-bottom: 1px solid #f1ece8;
+}
+
+.admin-refresh .admin-table tbody tr:nth-child(even) td {
+    background: #fcfaf8;
+}
+
+.admin-refresh .admin-table tbody tr:hover td {
+    background: #f7f1ec;
+}
+
+.admin-refresh .admin-table small {
+    display: block;
+    margin-top: 2px;
+    color: #5f5a56;
+}
+
+.admin-refresh .admin-status-badge {
+    padding: 4px 11px;
+    font-size: 12px;
+}
+
+.admin-refresh .admin-status-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.admin-refresh .admin-person {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.admin-refresh .admin-person-avatar {
+    display: grid;
+    flex: 0 0 36px;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #8b1e1e;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-refresh .admin-pagination {
+    justify-content: space-between;
+    margin: 0;
+    padding: 14px 24px;
+    border-top: 1px solid #ebe5e0;
+    background: #faf7f4;
+}
+
+.admin-refresh .admin-empty-state {
+    margin: 24px;
+}
+
+.admin-refresh .admin-report-controls {
+    padding: 0;
+}
+
+.admin-refresh .admin-report-controls .admin-filters {
+    border-bottom: 0;
+}
+
+.admin-refresh .admin-report-actions {
+    padding: 0 24px 16px;
+    background: #faf7f4;
+}
+
+.admin-refresh .admin-integrity-panel {
+    margin-top: 0;
+}
+
+/* Bar chart (CSS only) */
+.admin-refresh .admin-bars {
+    display: grid;
+    gap: 14px;
+    padding: 20px 24px;
+}
+
+.admin-refresh .admin-bar-row {
+    display: grid;
+    grid-template-columns: minmax(120px, 220px) 1fr auto;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+}
+
+.admin-refresh .admin-bar-track {
+    display: flex;
+    height: 14px;
+    overflow: hidden;
+    border-radius: 7px;
+    background: #f1ece8;
+}
+
+.admin-refresh .admin-bar-track span {
+    display: block;
+    height: 100%;
+}
+
+.admin-refresh .bar-present { background: #2e7d4f; }
+.admin-refresh .bar-late { background: #d9a400; }
+.admin-refresh .bar-excused { background: #2f6db5; }
+.admin-refresh .bar-absent { background: #c0392b; }
+
+.admin-refresh .admin-bar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 0 24px 18px;
+    color: #5f5a56;
+    font-size: 13px;
+}
+
+.admin-refresh .admin-bar-legend i {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    margin-right: 6px;
+    border-radius: 3px;
+}
+
+/* Attendance status overview (admin Attendance page): proportion bar + filter cells */
+/* Sits at the bottom of the "Attendance records" panel, below the table and pager */
+.admin-refresh .admin-status-overview {
+    margin: 0;
+    padding: 14px 24px 0;
+    border-top: 1px solid #ebe5e0;
+    background: #fff;
+}
+
+/* Compact Filter button (Attendance page only) */
+.admin-refresh .admin-filter-button.admin-filter-button-sm {
+    display: inline-block;
+    width: auto;
+    min-height: 34px;
+    padding: 5px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.admin-refresh .admin-status-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 14px;
+    margin-bottom: 10px;
+}
+
+.admin-refresh .admin-status-head h3 {
+    margin: 0;
+    color: #1a1a1a;
+    font-size: 15px;
+}
+
+.admin-refresh .admin-status-head p {
+    margin: 0;
+    color: #5f5a56;
+    font-size: 13px;
+}
+
+.admin-refresh .admin-status-head p strong {
+    color: #1a1a1a;
+}
+
+.admin-refresh .admin-status-overview .admin-bar-track {
+    height: 12px;
+    border-radius: 6px;
+}
+
+.admin-refresh .admin-status-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1px;
+    margin: 14px -24px 0;
+    border-top: 1px solid #ebe5e0;
+    background: #ebe5e0;
+}
+
+.admin-refresh .admin-status-item {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+    padding: 10px 24px 12px;
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+}
+
+.admin-refresh .admin-status-item:hover {
+    background: #faf7f4;
+}
+
+.admin-refresh .admin-status-item:focus-visible {
+    outline: 2px solid #8b1e1e;
+    outline-offset: -2px;
+}
+
+.admin-refresh .admin-status-item.is-active {
+    background: #f6efe9;
+    box-shadow: inset 0 -3px 0 #8b1e1e;
+}
+
+.admin-refresh .admin-status-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #5f5a56;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.admin-refresh .admin-status-name i {
+    flex: 0 0 10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.admin-refresh .admin-status-item.is-active .admin-status-name {
+    color: #1a1a1a;
+    font-weight: 700;
+}
+
+.admin-refresh .admin-status-figure {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.admin-refresh .admin-status-figure strong {
+    color: #1a1a1a;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.admin-refresh .admin-status-figure small {
+    color: #7a746f;
+    font-size: 13px;
+}
+
+@media (max-width: 700px) {
+    .admin-refresh .admin-status-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Key/value list (Security limits) */
+.admin-refresh .admin-kv {
+    margin: 0;
+    padding: 8px 24px 16px;
+}
+
+.admin-refresh .admin-kv div {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1ece8;
+    font-size: 14px;
+}
+
+.admin-refresh .admin-kv dt { color: #5f5a56; }
+.admin-refresh .admin-kv dd { margin: 0; font-weight: 700; }
+
+.admin-refresh .admin-note {
+    margin: 0;
+    padding: 0 24px 18px;
+    color: #5f5a56;
+    font-size: 13px;
+}
+
+.admin-refresh .admin-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1.6fr;
+    gap: 20px;
+    align-items: start;
+}
+
+@media (max-width: 1100px) {
+    .admin-refresh .admin-two-col { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+    .admin-refresh .admin-bar-row { grid-template-columns: 1fr; }
+    .admin-refresh .admin-page-heading h2 { font-size: 24px; }
+}
+
+/* ---- Attendance page: records panel stands out, table scrolls, filter bar stays compact ---- */
+.admin-refresh .admin-records-panel {
+    border-color: #d8cdc5;
+    box-shadow: 0 8px 26px rgb(60 30 20 / 13%);
+}
+
+.admin-refresh .admin-records-panel > .admin-panel-heading {
+    padding: 12px 24px;
+}
+
+.admin-refresh .admin-records-panel > .admin-panel-heading h3 {
+    font-size: 19px;
+}
+
+.admin-refresh .admin-records-count {
+    flex: 0 0 auto;
+    padding: 5px 13px;
+    border-radius: 999px;
+    background: #f6e4e4;
+    color: #8b1e1e;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Fixed-height scroll area: shows at least ~5 rows, grows with tall screens, never grows with more data */
+.admin-refresh .admin-records-scroll {
+    max-height: max(320px, calc(100vh - 480px));
+    overflow: auto;
+    overscroll-behavior: contain;
+}
+
+.admin-refresh .admin-records-scroll:focus-visible {
+    outline: 2px solid #8b1e1e;
+    outline-offset: -2px;
+}
+
+.admin-refresh .admin-records-scroll th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    box-shadow: 0 1px 0 #ebe5e0;
+}
+
+.admin-refresh .admin-records-scroll th,
+.admin-refresh .admin-records-scroll td {
+    padding-right: 12px;
+    padding-left: 12px;
+}
+
+.admin-refresh .admin-records-scroll th:first-child,
+.admin-refresh .admin-records-scroll td:first-child {
+    padding-left: 24px;
+}
+
+.admin-refresh .admin-records-scroll th:last-child,
+.admin-refresh .admin-records-scroll td:last-child {
+    padding-right: 24px;
+}
+
+.admin-refresh .admin-records-scroll td {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+@media (min-width: 761px) {
+    .admin-refresh .admin-filters-compact {
+        gap: 6px;
+        padding: 12px 24px;
+    }
+
+    .admin-refresh .admin-filters-compact label {
+        flex: 1 1 118px;
+        min-width: 0;
+    }
+
+    .admin-refresh .admin-filters-compact .admin-search-field {
+        flex: 2 1 140px;
+        min-width: 120px;
+    }
+
+    .admin-refresh .admin-filters-compact label:nth-of-type(2) {
+        flex-basis: 124px;
+    }
+
+    .admin-refresh .admin-filters-compact label:nth-of-type(3) {
+        flex-basis: 148px;
+    }
+
+    .admin-refresh .admin-filters-compact label:nth-of-type(4) {
+        flex-basis: 108px;
+    }
+
+    .admin-refresh .admin-filters-compact label:nth-of-type(n + 5) {
+        flex: 0 0 128px;
+    }
+
+    .admin-refresh .admin-filters-compact input,
+    .admin-refresh .admin-filters-compact select {
+        box-sizing: border-box;
+        min-height: 34px;
+        padding: 5px 9px;
+        font-size: 13px;
+    }
+
+    .admin-refresh .admin-filters-compact select {
+        min-width: 0;
+    }
+
+    .admin-refresh .admin-filters-compact input[type="date"] {
+        padding-left: 9px;
+    }
+
+    .admin-refresh .admin-filters-compact .admin-filter-button,
+    .admin-refresh .admin-filters-compact .admin-reset-link {
+        flex: 0 0 auto;
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-refresh .admin-records-scroll { max-height: 70vh; }
+}
+
+/* ---- Attendance page: match the approved preview (one-line rows, one-row filter bar) ---- */
+.admin-refresh .admin-filters-compact {
+    flex-wrap: nowrap;
+}
+
+.admin-refresh .admin-filters-compact .admin-filter-button {
+    width: auto;
+    margin: 0;
+}
+
+.admin-refresh .admin-records-scroll .admin-table {
+    min-width: 960px;
+}
+
+.admin-refresh .admin-records-scroll td {
+    white-space: nowrap;
+}
+
+.admin-refresh .admin-records-scroll td a {
+    color: #1a1a1a;
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.admin-refresh .admin-records-scroll td a:hover,
+.admin-refresh .admin-records-scroll td a:focus-visible {
+    color: #8b1e1e;
+    text-decoration: underline;
+}
+
+@media (max-width: 760px) {
+    .admin-refresh .admin-filters-compact { flex-wrap: wrap; }
+    .admin-refresh .admin-records-scroll .admin-table { min-width: 0; }
+    .admin-refresh .admin-records-scroll td { white-space: normal; }
+}
+
+.admin-refresh .admin-records-scroll .admin-status-badge::before {
+    display: none;
+}
+
+/* ---- Reports page layout ---- */
+.admin-reports-page .admin-report-controls { margin-bottom: 20px; }
+
+.admin-reports-page .admin-report-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0 16px;
+    border-bottom: 1px solid #ebe5e0;
+    background: #fff;
+}
+
+.admin-reports-page .admin-report-tabs a {
+    margin-bottom: -1px;
+    padding: 14px 16px 12px;
+    border-bottom: 3px solid transparent;
+    color: #5f5a56;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.admin-reports-page .admin-report-tabs a:hover { color: #8b1e1e; }
+
+.admin-reports-page .admin-report-tabs a.is-active {
+    border-bottom-color: #8b1e1e;
+    color: #8b1e1e;
+    font-weight: 700;
+}
+
+.admin-reports-page .admin-report-filters {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 24px;
+    border-bottom: 0;
+}
+
+.admin-reports-page .admin-report-filters label { flex: 0 1 165px; min-width: 0; }
+.admin-reports-page .admin-report-filters label.admin-report-department { flex-basis: 200px; }
+
+.admin-reports-page .admin-report-filters select {
+    box-sizing: border-box;
+    min-width: 0;
+    min-height: 36px;
+    padding: 5px 10px;
+    font-size: 13.5px;
+}
+
+.admin-reports-page .admin-report-filters .admin-filter-button { display: inline-block; width: auto; }
+
+.admin-reports-page .admin-report-actions {
+    display: flex;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 8px;
+    margin: 0 0 0 auto;
+    padding: 0;
+    background: none;
+}
+
+.admin-reports-page .admin-report-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: auto;
+    min-height: 36px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border: 1px solid #d8cdc5;
+    border-radius: 6px;
+    background: #fff;
+    color: #5c0e0e;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.admin-reports-page .admin-report-btn:hover { border-color: #8b1e1e; background: #faf7f4; color: #8b1e1e; }
+
+/* Summary cards: a little more presence */
+.admin-reports-page .admin-summary-card { gap: 14px; }
+.admin-reports-page .admin-summary-card > div { display: grid; gap: 2px; }
+
+/* Tables: numbers line up on the right, counts are colour-coded, rate gets a bar */
+.admin-reports-page .admin-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.admin-reports-page .admin-table td.num { white-space: nowrap; }
+.admin-reports-page .admin-table td.num-present { color: #1f6b3d; font-weight: 700; }
+.admin-reports-page .admin-table td.num-late { color: #89671b; font-weight: 700; }
+.admin-reports-page .admin-table td.num-absent { color: #9b1c1c; font-weight: 700; }
+.admin-reports-page .admin-table td.num-excused { color: #2f6eaa; font-weight: 700; }
+.admin-reports-page .admin-table td:first-child { min-width: 200px; font-weight: 500; }
+.admin-reports-page .admin-table th { white-space: nowrap; }
+
+.admin-reports-page .admin-rate {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    min-width: 150px;
+}
+
+.admin-reports-page .admin-rate-bar {
+    flex: 1 1 80px;
+    max-width: 110px;
+    height: 8px;
+    overflow: hidden;
+    border-radius: 4px;
+    background: #f1ece8;
+}
+
+.admin-reports-page .admin-rate-bar i { display: block; height: 100%; border-radius: 4px; background: #2e7d4f; }
+.admin-reports-page .admin-rate strong { min-width: 48px; text-align: right; }
+
+@media (max-width: 900px) {
+    .admin-reports-page .admin-report-actions { flex-basis: 100%; justify-content: flex-start; margin-left: 0; }
+}
+
+@media (max-width: 760px) {
+    .admin-reports-page .admin-report-tabs { overflow-x: auto; flex-wrap: nowrap; }
+    .admin-reports-page .admin-report-filters label,
+    .admin-reports-page .admin-report-filters label.admin-report-department { flex: 1 1 100%; }
+    .admin-reports-page .admin-table .num { text-align: left; }
+    .admin-reports-page .admin-rate { justify-content: flex-start; }
+}
+
+/* Reports: keep the 8-column tables inside the panel */
+.admin-reports-page .admin-table th,
+.admin-reports-page .admin-table td { padding-right: 14px; padding-left: 14px; }
+.admin-reports-page .admin-table th:first-child,
+.admin-reports-page .admin-table td:first-child { padding-left: 24px; }
+.admin-reports-page .admin-table th:last-child,
+.admin-reports-page .admin-table td:last-child { padding-right: 24px; }
+.admin-reports-page .admin-table td:first-child { min-width: 170px; }
+.admin-reports-page .admin-rate { min-width: 0; gap: 8px; }
+.admin-reports-page .admin-rate-bar { flex: 0 0 64px; max-width: none; }
+.admin-reports-page .admin-rate strong { min-width: 46px; }
+
+/* ---- Reports page: analytics layout (KPI row, chart row, detail table) ---- */
+.admin-reports-page .admin-page-heading { flex-wrap: wrap; align-items: flex-end; }
+.admin-reports-page .admin-page-heading .admin-report-actions { flex: 0 0 auto; }
+
+/* Controls: one panel, tabs on top, filters below */
+.admin-reports-page .admin-report-controls { margin-bottom: 20px; }
+.admin-reports-page .admin-report-filters { background: #faf7f4; }
+
+/* KPI cards: label, value and a small context line */
+.admin-reports-page .admin-summary-card small {
+    color: #7a726c;
+    font-size: 12.5px;
+    font-weight: 500;
+}
+
+/* Chart row: main chart (wide) + status mix (narrow) */
+.admin-reports-page .admin-insights {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.admin-reports-page .admin-insights .admin-panel { margin-bottom: 0; }
+.admin-reports-page .admin-insight-empty { margin: 0; padding: 28px 24px; color: #5f5a56; font-size: 14px; }
+
+/* Ranked bars */
+.admin-reports-page .admin-rank {
+    display: grid;
+    gap: 14px;
+    margin: 0;
+    padding: 20px 24px;
+    list-style: none;
+}
+
+.admin-reports-page .admin-rank li {
+    display: grid;
+    grid-template-columns: minmax(120px, 230px) minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: 14px;
+    font-size: 14px;
+}
+
+.admin-reports-page .admin-rank-label { min-width: 0; }
+
+.admin-reports-page .admin-rank-label span {
+    display: block;
+    overflow: hidden;
+    color: #1a1a1a;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.admin-reports-page .admin-rank-label small { display: block; color: #7a726c; font-size: 12px; }
+
+.admin-reports-page .admin-rank-track {
+    height: 12px;
+    overflow: hidden;
+    border-radius: 6px;
+    background: #f1ece8;
+}
+
+.admin-reports-page .admin-rank-track i { display: block; height: 100%; border-radius: 6px; }
+.admin-reports-page .admin-rank-track i.is-brand { background: #8b1e1e; }
+.admin-reports-page .admin-rank-track i.is-good { background: #2e7d4f; }
+.admin-reports-page .admin-rank-track i.is-fair { background: #d9a400; }
+.admin-reports-page .admin-rank-track i.is-low { background: #c0392b; }
+.admin-reports-page .admin-rank strong { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Status mix donut (CSS conic-gradient, no library) */
+.admin-reports-page .admin-donut-wrap {
+    display: grid;
+    justify-items: center;
+    gap: 20px;
+    padding: 22px 24px 24px;
+}
+
+.admin-reports-page .admin-donut {
+    display: grid;
+    place-items: center;
+    width: 168px;
+    height: 168px;
+    border-radius: 50%;
+    background: #f1ece8;
+}
+
+.admin-reports-page .admin-donut-hole {
+    display: grid;
+    place-content: center;
+    width: 108px;
+    height: 108px;
+    border-radius: 50%;
+    background: #fff;
+    text-align: center;
+}
+
+.admin-reports-page .admin-donut-hole strong { color: #1a1a1a; font-size: 26px; line-height: 1.1; letter-spacing: -0.02em; }
+.admin-reports-page .admin-donut-hole span { color: #7a726c; font-size: 12px; }
+
+.admin-reports-page .admin-donut-legend {
+    display: grid;
+    gap: 10px;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 14px;
+}
+
+.admin-reports-page .admin-donut-legend li {
+    display: grid;
+    grid-template-columns: 12px minmax(0, 1fr) auto 48px;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-reports-page .admin-donut-legend i { width: 12px; height: 12px; border-radius: 3px; }
+.admin-reports-page .admin-donut-legend strong { font-variant-numeric: tabular-nums; }
+.admin-reports-page .admin-donut-legend em { color: #7a726c; font-size: 13px; font-style: normal; text-align: right; }
+
+@media (max-width: 1100px) {
+    .admin-reports-page .admin-insights { grid-template-columns: 1fr; }
+    .admin-reports-page .admin-donut-wrap { grid-template-columns: auto minmax(0, 1fr); justify-items: stretch; align-items: center; }
+}
+
+@media (max-width: 760px) {
+    .admin-reports-page .admin-rank li { grid-template-columns: minmax(0, 1fr) 40px; row-gap: 6px; }
+    .admin-reports-page .admin-rank-track { grid-column: 1 / -1; grid-row: 2; }
+    .admin-reports-page .admin-donut-wrap { grid-template-columns: 1fr; justify-items: center; }
+}
+
+@media print {
+    .admin-reports-page .admin-report-actions { display: none !important; }
+    .admin-reports-page .admin-insights { grid-template-columns: 1fr 1fr; break-inside: avoid; }
+    .admin-reports-page .admin-panel { border: 1px solid #ddd; }
+    .admin-reports-page .admin-donut,
+    .admin-reports-page .admin-rank-track i,
+    .admin-reports-page .admin-donut-legend i { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+/* ---- Security page layout ---- */
+.admin-refresh .admin-summary-card small { color: #7a726c; font-size: 12.5px; font-weight: 500; }
+.admin-security-page .admin-summary-card > div { display: grid; gap: 2px; }
+
+.admin-security-page .admin-security-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+    gap: 20px;
+    margin-bottom: 24px;
+    align-items: start;
+}
+
+.admin-security-page .admin-security-grid .admin-panel { margin-bottom: 0; }
+.admin-security-page .admin-security-scroll { max-height: 340px; overflow: auto; }
+.admin-security-page .admin-security-scroll thead th { position: sticky; top: 0; z-index: 1; }
+
+.admin-security-page .admin-count-pill {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #f7e3e3;
+    color: #8b1e1e;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.admin-security-page .admin-rule-list { margin: 0; padding: 6px 24px 8px; list-style: none; }
+
+.admin-security-page .admin-rule-list li {
+    display: grid;
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1ece8;
+    font-size: 14px;
+}
+
+.admin-security-page .admin-rule-list li:last-child { border-bottom: 0; }
+.admin-security-page .admin-rule-list strong { font-size: 14px; text-align: right; }
+
+.admin-security-page .admin-rule-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f7e3e3;
+    color: #8b1e1e;
+    font-size: 14px;
+}
+
+.admin-security-page .admin-action-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #f4efeb;
+    color: #5c0e0e;
+    font-size: 12.5px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.admin-security-page .admin-security-activity .admin-filters {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #faf7f4;
+}
+
+.admin-security-page .admin-security-activity .admin-filters label { flex: 0 1 200px; min-width: 0; }
+.admin-security-page .admin-security-activity .admin-filters select { box-sizing: border-box; min-height: 36px; padding: 5px 10px; font-size: 13.5px; }
+.admin-security-page .admin-security-activity .admin-filter-button { display: inline-block; width: auto; }
+.admin-security-page .admin-security-activity .admin-table td:first-child { white-space: nowrap; }
+
+@media (max-width: 1100px) {
+    .admin-security-page .admin-security-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 760px) {
+    .admin-security-page .admin-security-activity .admin-filters label { flex: 1 1 100%; }
+}

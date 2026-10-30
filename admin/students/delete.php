@@ -15,10 +15,19 @@ if (!$userId || $userId < 1 || $userId === (int) $_SESSION['user_id']) {
     http_response_code(400);
     exit('A valid non-administrator account is required.');
 }
-$stmt = $pdo->prepare("UPDATE users SET account_status = 'inactive' WHERE user_id = ? AND role IN ('student', 'department_head')");
+$stmt = $pdo->prepare(
+    "UPDATE users u
+     INNER JOIN roles r ON r.role_id = u.role_id
+     SET u.account_status = 'inactive'
+     WHERE u.user_id = ? AND r.role_name IN ('student', 'department_head')"
+);
 $stmt->execute([$userId]);
 if ($stmt->rowCount() === 0) {
-    $check = $pdo->prepare("SELECT user_id FROM users WHERE user_id = ? AND role IN ('student', 'department_head')");
+    $check = $pdo->prepare(
+        "SELECT u.user_id FROM users u
+         INNER JOIN roles r ON r.role_id = u.role_id
+         WHERE u.user_id = ? AND r.role_name IN ('student', 'department_head')"
+    );
     $check->execute([$userId]);
     if (!$check->fetchColumn()) {
         http_response_code(404);
@@ -26,4 +35,4 @@ if ($stmt->rowCount() === 0) {
     }
 }
 adminLogActivity($pdo, 'deactivated', 'user', $userId);
-adminRedirect('/admin/students/index.php', ['notice' => 'status_updated']);
+adminRedirect(adminReturnPath('/admin/students/index.php'), ['notice' => 'status_updated']);

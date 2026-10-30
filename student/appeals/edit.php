@@ -35,15 +35,13 @@ $stmt = $pdo->prepare(
      WHERE aa.appeal_id = ?
        AND aa.student_id = ?
        AND ea.student_id = ?
-       AND e.department_id = ?
      LIMIT 1'
 );
 
 $stmt->execute([
     $appealId,
     $studentId,
-    $studentId,
-    $studentDepartmentId
+    $studentId
 ]);
 
 $appeal = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -245,3 +243,110 @@ $studentPageTitle = 'Edit Attendance Appeal';
 $studentPageCss = 'student-appeals.css';
 
 require_once __DIR__ . '/../../includes/student_layout_start.php';
+
+$isAbsent = $appeal['attendance_status'] === 'absent';
+$hasEvidence = !empty($appeal['evidence_path']);
+?>
+
+<section class="dashboard-section student-module-page">
+
+    <div class="section-heading">
+        <div>
+            <h2>Edit Attendance Appeal</h2>
+            <p>
+                <?= studentEscape($appeal['event_title']) ?> ·
+                Recorded as
+                <span class="status-pill status-<?= studentEscape($appeal['attendance_status']) ?>">
+                    <?= studentEscape(ucfirst($appeal['attendance_status'])) ?>
+                </span>
+            </p>
+        </div>
+
+        <a class="student-appeal-link"
+            href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/index.php">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            Back to appeals
+        </a>
+    </div>
+
+    <div class="student-content-panel">
+
+        <?php if ($errors !== []): ?>
+            <div class="dashboard-alert student-appeal-errors" role="alert">
+                <?php foreach ($errors as $error): ?>
+                    <div><?= studentEscape($error) ?></div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <form
+            class="student-appeal-form"
+            method="post"
+            enctype="multipart/form-data"
+            action="<?= studentEscape($studentBaseUrl) ?>/student/appeals/edit.php">
+
+            <input type="hidden" name="csrf_token"
+                value="<?= studentEscape(studentCsrfToken()) ?>">
+            <input type="hidden" name="appeal_id"
+                value="<?= (int) $appealId ?>">
+
+            <div class="student-appeal-field">
+                <label for="appeal_reason">Explain what happened</label>
+                <textarea
+                    id="appeal_reason"
+                    name="appeal_reason"
+                    rows="6"
+                    maxlength="4000"
+                    required><?= studentEscape($reason) ?></textarea>
+                <small>Up to 4,000 characters.</small>
+            </div>
+
+            <div class="student-appeal-field">
+                <label for="evidence">
+                    <?= $hasEvidence ? 'Replace supporting proof' : 'Supporting proof' ?>
+                    <?= $isAbsent ? '(required)' : '(optional)' ?>
+                </label>
+
+                <?php if ($hasEvidence): ?>
+                    <p class="student-appeal-current">
+                        <i class="fa-solid fa-paperclip" aria-hidden="true"></i>
+                        <a href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/evidence.php?id=<?= (int) $appealId ?>"
+                            target="_blank" rel="noopener">View current proof</a>
+                    </p>
+                <?php endif; ?>
+
+                <input
+                    id="evidence"
+                    type="file"
+                    name="evidence"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
+                <small>PDF, JPG, or PNG. Maximum 5 MB.</small>
+
+                <?php if ($hasEvidence && !$isAbsent): ?>
+                    <label class="student-appeal-check">
+                        <input type="checkbox" name="remove_evidence" value="1">
+                        Remove the current proof
+                    </label>
+                <?php endif; ?>
+            </div>
+
+            <div class="student-appeal-form-actions">
+                <button class="student-appeal-button" type="submit">
+                    <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                    Save changes
+                </button>
+                <a class="student-appeal-button student-appeal-button-secondary"
+                    href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/index.php">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<?php require __DIR__ . '/../../includes/footer.php'; ?>
+
+</main>
+</body>
+
+</html>

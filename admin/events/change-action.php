@@ -43,6 +43,14 @@ try {
         if ($request['event_status'] !== 'approved') {
             throw new RuntimeException('Only an approved event can receive schedule changes.');
         }
+        $currentNow = $pdo->query('SELECT NOW()')->fetchColumn();
+        $attendanceCheck = $pdo->prepare(
+            'SELECT 1 FROM event_attendance WHERE event_id = ? LIMIT 1'
+        );
+        $attendanceCheck->execute([(int) $request['event_id']]);
+        if ($request['current_start_at'] <= $currentNow || $attendanceCheck->fetchColumn() !== false) {
+            throw new RuntimeException('Events cannot be changed after they begin or after attendance exists.');
+        }
         $payload = json_decode($request['request_payload'], true, 512, JSON_THROW_ON_ERROR);
         $values = $payload['values'] ?? null;
         $participants = $payload['participants'] ?? null;
@@ -165,7 +173,7 @@ try {
         if ($attendanceRulesReset) {
             $pdo->prepare('DELETE FROM attendance_settings WHERE event_id = ?')
                 ->execute([(int) $request['event_id']]);
-            $remarks .= "\n\nAttendance time rules were cleared because the event schedule changed. Reconfigure the cutoffs before barcode check-in.";
+            $remarks .= "\n\nAttendance time rules were cleared because the event schedule changed. Reconfigure the cutoffs before QR check-in.";
         }
         $pdo->prepare('DELETE FROM event_participants WHERE event_id = ?')->execute([(int) $request['event_id']]);
         $participantInsert = $pdo->prepare(
@@ -183,6 +191,7 @@ try {
                 $type === 'section' ? $participant['section'] : null,
             ]);
         }
+        snapshotEventAttendanceRoster($pdo, (int) $request['event_id'], true);
     }
 
     $review = $pdo->prepare(

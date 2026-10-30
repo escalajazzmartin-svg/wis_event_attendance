@@ -26,29 +26,32 @@ if ($semester !== '') {
 if ($departmentId > 0) {
     $conditions[] = match ($report) {
         'events' => 'd.department_id = :department_id',
-        'students' => 's.department_id = :department_id',
+        'students' => 'r.department_id = :department_id',
         default => 'e.department_id = :department_id',
     };
     $params['department_id'] = $departmentId;
 }
 $where = $conditions === [] ? '' : 'WHERE ' . implode(' AND ', $conditions);
 if ($report === 'students') {
-    $sql = "SELECT d.department_name, s.student_number,
-                   CONCAT_WS(' ', s.first_name, s.middle_name, s.last_name) AS student_name,
-                   COUNT(DISTINCT ea.event_id) AS recorded_events,
+    $sql = "SELECT d.department_name, r.student_number,
+                   CONCAT_WS(' ', r.first_name, r.middle_name, r.last_name) AS student_name,
+                   COUNT(DISTINCT CASE
+                       WHEN ea.attendance_id IS NOT NULL THEN e.event_id
+                   END) AS recorded_events,
                    COALESCE(SUM(ea.attendance_status = 'present'), 0) AS present,
                    COALESCE(SUM(ea.attendance_status = 'late'), 0) AS late,
                    COALESCE(SUM(ea.attendance_status = 'absent'), 0) AS absent,
                    COALESCE(SUM(ea.attendance_status = 'excused'), 0) AS excused
-            FROM students s
-            INNER JOIN departments d ON d.department_id = s.department_id
-            LEFT JOIN event_attendance ea ON ea.student_id = s.student_id
-            LEFT JOIN events e ON e.event_id = ea.event_id
+            FROM event_attendance_roster r
+            INNER JOIN departments d ON d.department_id = r.department_id
+            INNER JOIN events e ON e.event_id = r.event_id
+            LEFT JOIN event_attendance ea
+                ON ea.event_id = r.event_id AND ea.student_id = r.student_id
             LEFT JOIN academic_periods ap ON ap.academic_period_id = e.academic_period_id
             $where
-            GROUP BY s.student_id, d.department_name, s.student_number,
-                     s.first_name, s.middle_name, s.last_name
-            ORDER BY d.department_name, s.last_name, s.first_name";
+            GROUP BY r.student_id, r.department_id, d.department_name,
+                     r.student_number, r.first_name, r.middle_name, r.last_name
+            ORDER BY d.department_name, r.last_name, r.first_name";
 } elseif ($report === 'attendance') {
     $sql = "SELECT d.department_name, e.event_title, e.start_at,
                    COUNT(DISTINCT ea.student_id) AS total_records,
@@ -56,19 +59,8 @@ if ($report === 'students') {
                    COALESCE(SUM(ea.attendance_status = 'late'), 0) AS late,
                    COALESCE(SUM(ea.attendance_status = 'absent'), 0) AS absent,
                    COALESCE(SUM(ea.attendance_status = 'excused'), 0) AS excused,
-                   (SELECT COUNT(*) FROM students eligible
-                    WHERE eligible.department_id = e.department_id
-                      AND eligible.enrollment_status = 'enrolled'
-                      AND (
-                        NOT EXISTS (SELECT 1 FROM event_participants ep0 WHERE ep0.event_id = e.event_id)
-                        OR EXISTS (
-                            SELECT 1 FROM event_participants ep
-                            WHERE ep.event_id = e.event_id
-                              AND ((ep.participant_type = 'student' AND ep.student_id = eligible.student_id)
-                                OR (ep.participant_type = 'year_level' AND ep.year_level = eligible.year_level)
-                                OR (ep.participant_type = 'section' AND ep.year_level = eligible.year_level AND ep.section = eligible.section))
-                        )
-                      )
+                   (SELECT COUNT(*) FROM event_attendance_roster eligible
+                    WHERE eligible.event_id = e.event_id
                    ) AS eligible_students
             FROM events e
             INNER JOIN departments d ON d.department_id = e.department_id
@@ -90,19 +82,8 @@ if ($report === 'students') {
                        COALESCE(SUM(ea.attendance_status = 'late'), 0) AS late,
                        COALESCE(SUM(ea.attendance_status = 'absent'), 0) AS absent,
                        COALESCE(SUM(ea.attendance_status = 'excused'), 0) AS excused,
-                       (SELECT COUNT(*) FROM students eligible
-                        WHERE eligible.department_id = e.department_id
-                          AND eligible.enrollment_status = 'enrolled'
-                          AND (
-                            NOT EXISTS (SELECT 1 FROM event_participants ep0 WHERE ep0.event_id = e.event_id)
-                            OR EXISTS (
-                                SELECT 1 FROM event_participants ep
-                                WHERE ep.event_id = e.event_id
-                                  AND ((ep.participant_type = 'student' AND ep.student_id = eligible.student_id)
-                                    OR (ep.participant_type = 'year_level' AND ep.year_level = eligible.year_level)
-                                    OR (ep.participant_type = 'section' AND ep.year_level = eligible.year_level AND ep.section = eligible.section))
-                            )
-                          )
+                       (SELECT COUNT(*) FROM event_attendance_roster eligible
+                        WHERE eligible.event_id = e.event_id
                        ) AS eligible_students
                 FROM events e
                 INNER JOIN departments d ON d.department_id = e.department_id

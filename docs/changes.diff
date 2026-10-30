@@ -1,0 +1,852 @@
+diff -ru -x for_testing-main ./CLAUDE.md /home/claude/work/for_testing-main/CLAUDE.md
+--- ./CLAUDE.md	2026-10-30 11:29:42.000000000 +0000
++++ /home/claude/work/for_testing-main/CLAUDE.md	2026-10-30 11:55:22.463376245 +0000
+@@ -9,7 +9,7 @@
+ - `BASE_URL` is derived from the folder's position under the web document root (`config/app.php`), so the app can live in a subfolder. Always build URLs with `BASE_URL`; never hard-code a folder name.
+ - Config comes from **server environment variables** (`WEAMMS_ENV`, `WEAMMS_DB_*`, `WEAMMS_TIMEZONE`); `.env` is NOT auto-loaded. See `README.md` and `.env.example` (names only).
+ - Timezone: `Asia/Manila` (default) or `UTC` only (`config/timezone.php`).
+-- Frontend: hand-written CSS in `assets/css/`, Font Awesome (CDN), Chart.js and JsBarcode (CDN). No build step.
++- Frontend: hand-written CSS in `assets/css/`, Font Awesome (CDN), Chart.js, qrcode-generator and jsQR (CDN). No build step.
+ - Run: put the folder under the web root, set env vars, import `database/wis_event_attendance.sql`, create the first admin with `scripts/create-admin.php` (CLI). Not run/verified by Claude — PHP is not available in the Claude sandbox.
+ - **No automated tests exist** (no PHPUnit/composer). Verification = `php -l <file>` on changed files plus manual checks in the browser.
+ - **Not a Git repository** in the uploaded copy. Do not run `git init` without asking.
+@@ -17,7 +17,7 @@
+ ## Structure (real)
+ - `admin/` — admin pages (students, department-heads, departments, events, attendance, reports, security, academic-periods*). `*` = 501 placeholder.
+ - `department-head/` — dashboard, students, department, events, attendance (+scan/records/correct/history), attendance-settings (Time Rules), appeals, reports.
+-- `student/` — dashboard, events, attendance (+scan = show own barcode), appeals, reports; `profile/` is a placeholder.
++- `student/` — dashboard, events, attendance (+scan.php = shows own QR code), appeals, reports; `profile/` is a placeholder.
+ - `auth/` — `admin-login.php`, `department-head-login.php`, `student-login.php`, `logout.php`; `forgot-password.php` is a placeholder.
+ - `includes/` — per-role context + layout: `admin_context.php`/`admin_layout_start.php`, `department_head_context.php` + `department_head_shell_start|end.php` + `department_head_sidebar.php` (+ older `department_head_layout_start.php`), `student_context.php`/`student_layout_start.php`/`sidebar.php`/`header.php`, `event_lifecycle.php`, `login_rate_limit.php`.
+ - `api/`, `classes/`, `reports/`, `config/constants.php`, `includes/{auth,csrf,functions,role_guard}.php` — **all stubs** that return HTTP 501 via `includes/unimplemented.php`. Real logic lives in the page files and `includes/*_context.php`. Do not assume these stubs hold logic.
+@@ -32,7 +32,7 @@
+   - Student: `studentEscape`, `studentCsrfToken`/`studentVerifyCsrf`; vars `$studentPageTitle`, `$studentPageCss`.
+ - Admin CSRF: token lives in `$_SESSION['admin_csrf_token']` and is exposed to pages as `$adminCsrfToken` (hidden input `csrf_token`); verify with `adminVerifyCsrf()`.
+ - Always: PDO prepared statements, per-role CSRF tokens on POST, escape output with the role's escape helper, POST-then-redirect (`?notice=...`).
+-- Event statuses: `pending, approved, rejected, cancelled, cancellation_requested, completed`. Attendance: `present, late, absent, excused`; sources `barcode, department_head, appeal, system`. `synchronizeEventLifecycle()` runs on protected requests and by cron.
++- Event statuses: `pending, approved, rejected, cancelled, cancellation_requested, completed`. Attendance: `present, late, absent, excused`; sources `barcode` (= QR scan; the stored value was kept, shown as "QR code"), `department_head, appeal, system`. `synchronizeEventLifecycle()` runs on protected requests and by cron.
+ - Department head permissions are per department flags set by admin: `department_head_can_edit` (edit department) and `department_head_can_edit_attendance` (correct attendance). Respect them.
+ - Department head data is always scoped by `$departmentId`; never query across departments.
+ 
+@@ -43,7 +43,7 @@
+ - `docs/SYSTEM_FEATURES.md` (features per role), `docs/UI_GUIDELINES.md` (visual rules/components), `docs/PROJECT_STATUS.md` (what changed, limitations, next steps).
+ 
+ ## UI rules
+-See `docs/UI_GUIDELINES.md`. Short version: maroon sidebar (do not change sidebar UI unless asked), **Roboto** text + **Cinzel** brand headings, load fonts via the shared Google Fonts link already present in every layout head. Reuse `ad-*` components and the shared sidebar files; do not create per-page one-off styles. Department-head pages use three different layouts (shell, older layout, self-contained dashboard) — check `docs/ARCHITECTURE.md` before editing shared layout files. Do not change sidebar expand/collapse behavior unless asked.
++See `docs/UI_GUIDELINES.md`. Short version: maroon sidebar (do not change sidebar UI unless asked), **Roboto** text + **Cinzel** brand headings, load fonts via the shared Google Fonts link already present in every layout head. Reuse `ad-*` components and the shared sidebar files; do not create per-page one-off styles. Department-head pages use three different layouts (shell, older layout, self-contained dashboard) — check `docs/ARCHITECTURE.md` before editing shared layout files. Do not change sidebar expand/collapse behavior unless asked. All three portals share `assets/css/ui-refresh.css` (loaded last in every layout; no top bar, `#f3f0ed` background, 14px panels) — put cross-role look changes there.
+ 
+ ## Workflow for every task
+ 1. Read this file and the relevant `docs/*.md`.
+diff -ru -x for_testing-main ./admin/attendance/history.php /home/claude/work/for_testing-main/admin/attendance/history.php
+--- ./admin/attendance/history.php	2026-10-30 11:29:42.000000000 +0000
++++ /home/claude/work/for_testing-main/admin/attendance/history.php	2026-10-30 11:53:40.508002187 +0000
+@@ -34,7 +34,7 @@
+ ?>
+ <section class="admin-content-section">
+     <div class="admin-page-heading"><div><span class="admin-eyebrow">Attendance audit</span><h2>Change History</h2><p><?= adminEscape($record['event_title']) ?> · <?= adminEscape($record['first_name'] . ' ' . $record['last_name']) ?> (<?= adminEscape($record['student_number']) ?>)</p></div><a class="admin-action-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/attendance/index.php">Back to attendance</a></div>
+-    <section class="admin-panel"><div class="admin-panel-heading"><div><h3>Current record</h3><p><?= adminEscape(ucfirst($record['attendance_status'])) ?> · <?= adminEscape(ucwords(str_replace('_', ' ', $record['record_source']))) ?></p></div></div>
++    <section class="admin-panel"><div class="admin-panel-heading"><div><h3>Current record</h3><p><?= adminEscape(ucfirst($record['attendance_status'])) ?> · <?= adminEscape(ucwords(str_replace(['_', 'barcode'], [' ', 'QR code'], $record['record_source']))) ?></p></div></div>
+         <?php if ($history === []): ?><p>No change history is recorded for this entry.</p><?php else: ?>
+             <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Changed</th><th>Staff member</th><th>Action</th><th>Before</th><th>After</th><th>Remarks</th></tr></thead><tbody><?php foreach ($history as $item): ?><tr><td data-label="Changed"><?= adminEscape(date('M j, Y · g:i A', strtotime($item['created_at']))) ?></td><td data-label="Staff member"><?= adminEscape($item['username'] ?: 'Unknown') ?></td><td data-label="Action"><?= adminEscape($item['action_type']) ?></td><td data-label="Before"><?= adminEscape($item['old_value'] ?: '—') ?></td><td data-label="After"><?= adminEscape($item['new_value'] ?: '—') ?></td><td data-label="Remarks"><?= adminEscape($item['notes'] ?: '—') ?></td></tr><?php endforeach; ?></tbody></table></div>
+         <?php endif; ?>
+diff -ru -x for_testing-main ./admin/attendance/index.php /home/claude/work/for_testing-main/admin/attendance/index.php
+--- ./admin/attendance/index.php	2026-10-30 11:29:42.000000000 +0000
++++ /home/claude/work/for_testing-main/admin/attendance/index.php	2026-10-30 11:53:40.508617719 +0000
+@@ -123,7 +123,7 @@
+ )->fetchAll(PDO::FETCH_ASSOC);
+ ?>
+ <section class="admin-content-section admin-refresh admin-attendance-page">
+-    <div class="admin-page-heading"><div><span class="admin-eyebrow">Admin · Monitoring</span><h2>Attendance Monitoring</h2><p>Search barcode submissions, review statuses, and identify missing or duplicate records.</p></div></div>
++    <div class="admin-page-heading"><div><span class="admin-eyebrow">Admin · Monitoring</span><h2>Attendance Monitoring</h2><p>Search QR submissions, review statuses, and identify missing or duplicate records.</p></div></div>
+     <?php
+     $statusOverview = ['present' => 'Present', 'late' => 'Late', 'absent' => 'Absent', 'excused' => 'Excused'];
+     $overviewTotal = (int) $summary['records'];
+@@ -151,7 +151,7 @@
+         <?php if ($records === []): ?><div class="admin-empty-state"><strong>No attendance records found</strong><p>Try changing your filters.</p></div><?php else: ?>
+             <div class="admin-table-wrap admin-records-scroll" tabindex="0" role="region" aria-label="Attendance records, scrollable"><table class="admin-table"><thead><tr><th>Student</th><th>Event</th><th>Department</th><th>Period</th><th>Status</th><th>Timestamp / source</th><th>Recorded by</th><th>History</th></tr></thead><tbody>
+                 <?php foreach ($records as $record): ?>
+-                    <tr><td data-label="Student"><?php $studentFullName = trim($record['first_name'] . ' ' . ($record['middle_name'] ? $record['middle_name'] . ' ' : '') . $record['last_name']); ?><div class="admin-person"><span class="admin-person-avatar" aria-hidden="true"><?= adminEscape(mb_strtoupper(mb_substr($record['first_name'], 0, 1) . mb_substr($record['last_name'], 0, 1))) ?></span><div><?= adminEscape($studentFullName) ?><small><?= adminEscape($record['student_number']) ?></small></div></div></td><td data-label="Event"><?= adminEscape($record['event_title']) ?><small><?= adminEscape(date('M j, Y', strtotime($record['start_at']))) ?></small></td><td data-label="Department" title="<?= adminEscape($record['department_name']) ?>"><?= adminEscape($record['department_code']) ?></td><td data-label="Period"><?= adminEscape($record['academic_year'] . ' · ' . $record['semester']) ?></td><td data-label="Status"><span class="admin-status-badge admin-status-<?= adminEscape($record['attendance_status']) ?>"><?= adminEscape(ucfirst($record['attendance_status'])) ?></span></td><td data-label="Timestamp / source"><span title="Source: <?= adminEscape(ucwords(str_replace('_', ' ', $record['record_source']))) ?>"><?= $record['check_in_at'] ? adminEscape(date('M j, g:i A', strtotime($record['check_in_at']))) : '—' ?></span></td><td data-label="Recorded by"><?= adminEscape($record['recorded_by'] ?: 'System') ?></td><td data-label="History"><a href="<?= adminEscape($adminBaseUrl) ?>/admin/attendance/history.php?id=<?= (int) $record['attendance_id'] ?>" aria-label="View attendance history">View</a></td></tr>
++                    <tr><td data-label="Student"><?php $studentFullName = trim($record['first_name'] . ' ' . ($record['middle_name'] ? $record['middle_name'] . ' ' : '') . $record['last_name']); ?><div class="admin-person"><span class="admin-person-avatar" aria-hidden="true"><?= adminEscape(mb_strtoupper(mb_substr($record['first_name'], 0, 1) . mb_substr($record['last_name'], 0, 1))) ?></span><div><?= adminEscape($studentFullName) ?><small><?= adminEscape($record['student_number']) ?></small></div></div></td><td data-label="Event"><?= adminEscape($record['event_title']) ?><small><?= adminEscape(date('M j, Y', strtotime($record['start_at']))) ?></small></td><td data-label="Department" title="<?= adminEscape($record['department_name']) ?>"><?= adminEscape($record['department_code']) ?></td><td data-label="Period"><?= adminEscape($record['academic_year'] . ' · ' . $record['semester']) ?></td><td data-label="Status"><span class="admin-status-badge admin-status-<?= adminEscape($record['attendance_status']) ?>"><?= adminEscape(ucfirst($record['attendance_status'])) ?></span></td><td data-label="Timestamp / source"><span title="Source: <?= adminEscape(ucwords(str_replace(['_', 'barcode'], [' ', 'QR code'], $record['record_source']))) ?>"><?= $record['check_in_at'] ? adminEscape(date('M j, g:i A', strtotime($record['check_in_at']))) : '—' ?></span></td><td data-label="Recorded by"><?= adminEscape($record['recorded_by'] ?: 'System') ?></td><td data-label="History"><a href="<?= adminEscape($adminBaseUrl) ?>/admin/attendance/history.php?id=<?= (int) $record['attendance_id'] ?>" aria-label="View attendance history">View</a></td></tr>
+                 <?php endforeach; ?>
+             </tbody></table></div>
+             <?php if ($totalPages > 1): ?>
+diff -ru -x for_testing-main ./admin/events/change-action.php /home/claude/work/for_testing-main/admin/events/change-action.php
+--- ./admin/events/change-action.php	2026-10-30 11:29:43.000000000 +0000
++++ /home/claude/work/for_testing-main/admin/events/change-action.php	2026-10-30 11:53:36.795433847 +0000
+@@ -173,7 +173,7 @@
+         if ($attendanceRulesReset) {
+             $pdo->prepare('DELETE FROM attendance_settings WHERE event_id = ?')
+                 ->execute([(int) $request['event_id']]);
+-            $remarks .= "\n\nAttendance time rules were cleared because the event schedule changed. Reconfigure the cutoffs before barcode check-in.";
++            $remarks .= "\n\nAttendance time rules were cleared because the event schedule changed. Reconfigure the cutoffs before QR check-in.";
+         }
+         $pdo->prepare('DELETE FROM event_participants WHERE event_id = ?')->execute([(int) $request['event_id']]);
+         $participantInsert = $pdo->prepare(
+diff -ru -x for_testing-main ./admin/students/edit.php /home/claude/work/for_testing-main/admin/students/edit.php
+--- ./admin/students/edit.php	2026-10-30 11:29:44.000000000 +0000
++++ /home/claude/work/for_testing-main/admin/students/edit.php	2026-10-30 11:53:36.794745229 +0000
+@@ -60,14 +60,14 @@
+     </form>
+     <?php if ($isStudent): ?>
+         <div class="ad-card ad-card-form">
+-            <h3 class="ad-card-title">Attendance barcode</h3>
+-            <p class="ad-card-sub">Regenerating the barcode stops the old code from working.</p>
+-            <form class="ad-perm-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/students/regenerate-barcode.php" onsubmit="return confirm('Regenerate this student barcode? The old code will stop working.');">
++            <h3 class="ad-card-title">Attendance QR code</h3>
++            <p class="ad-card-sub">Regenerating the QR code stops the old code from working.</p>
++            <form class="ad-perm-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/students/regenerate-barcode.php" onsubmit="return confirm('Regenerate this student QR code? The old code will stop working.');">
+                 <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
+                 <input type="hidden" name="user_id" value="<?= (int) $user['user_id'] ?>">
+                 <input type="hidden" name="return" value="students">
+-                <span>Issue a new barcode for this student</span>
+-                <button class="ad-btn" type="submit">Regenerate barcode</button>
++                <span>Issue a new QR code for this student</span>
++                <button class="ad-btn" type="submit">Regenerate QR code</button>
+             </form>
+         </div>
+     <?php elseif ($permissions !== null): ?>
+diff -ru -x for_testing-main ./admin/students/index.php /home/claude/work/for_testing-main/admin/students/index.php
+--- ./admin/students/index.php	2026-10-30 11:29:43.000000000 +0000
++++ /home/claude/work/for_testing-main/admin/students/index.php	2026-10-30 11:53:36.794935274 +0000
+@@ -30,7 +30,7 @@
+     'user_created' => 'Student account created.',
+     'user_updated' => 'Student details saved.',
+     'status_updated' => 'Account status updated.',
+-    'barcode_regenerated' => 'Barcode regenerated. The old code no longer works.',
++    'barcode_regenerated' => 'QR code regenerated. The old code no longer works.',
+     default => '',
+ };
+ $exportQuery = http_build_query(array_filter($filters, static fn ($v): bool => $v !== '' && $v !== 0));
+diff -ru -x for_testing-main ./admin/students/regenerate-barcode.php /home/claude/work/for_testing-main/admin/students/regenerate-barcode.php
+--- ./admin/students/regenerate-barcode.php	2026-10-30 11:29:43.000000000 +0000
++++ /home/claude/work/for_testing-main/admin/students/regenerate-barcode.php	2026-10-30 11:53:36.795082544 +0000
+@@ -22,5 +22,5 @@
+     http_response_code(404);
+     exit('Student account not found.');
+ }
+-adminLogActivity($pdo, 'regenerated barcode for', 'student', $userId);
++adminLogActivity($pdo, 'regenerated QR code for', 'student', $userId);
+ adminRedirect(adminReturnPath('/admin/students/index.php'), ['notice' => 'barcode_regenerated']);
+diff -ru -x for_testing-main ./assets/css/department-head.css /home/claude/work/for_testing-main/assets/css/department-head.css
+--- ./assets/css/department-head.css	2026-10-30 11:29:45.000000000 +0000
++++ /home/claude/work/for_testing-main/assets/css/department-head.css	2026-10-30 11:53:24.352989728 +0000
+@@ -1943,4 +1943,52 @@
+         grid-column: auto;
+         margin-bottom: 0;
+     }
+-}
+\ No newline at end of file
++}
++
++/* QR camera scanner (department-head/attendance/scan.php) */
++.qr-camera {
++    display: grid;
++    justify-items: start;
++    gap: 12px;
++    max-width: 700px;
++    margin-top: 20px;
++}
++
++.qr-camera-view {
++    position: relative;
++    width: min(100%, 420px);
++    aspect-ratio: 1 / 1;
++    overflow: hidden;
++    border: 1px solid #ebe5e0;
++    border-radius: 14px;
++    background: #171717;
++}
++
++.qr-camera-view[hidden] {
++    display: none;
++}
++
++.qr-camera-view video {
++    width: 100%;
++    height: 100%;
++    object-fit: cover;
++}
++
++.qr-camera-frame {
++    position: absolute;
++    inset: 18%;
++    border: 3px solid #f2c300;
++    border-radius: 12px;
++    box-shadow: 0 0 0 999px rgb(0 0 0 / 28%);
++    pointer-events: none;
++}
++
++.qr-camera-status {
++    margin: 0;
++    color: #555;
++    font-size: 14px;
++}
++
++.qr-camera-actions .management-button {
++    width: auto;
++}
+diff -ru -x for_testing-main ./assets/css/student/student-attendance.css /home/claude/work/for_testing-main/assets/css/student/student-attendance.css
+--- ./assets/css/student/student-attendance.css	2026-10-30 11:29:46.000000000 +0000
++++ /home/claude/work/for_testing-main/assets/css/student/student-attendance.css	2026-10-30 11:53:00.679641845 +0000
+@@ -1,25 +1,39 @@
+-.student-barcode-card {
++.student-qr-card {
+     display: grid;
+     justify-items: center;
+     gap: 14px;
+-    max-width: 780px;
++    max-width: 520px;
+     margin: 0 auto;
+     padding: 28px;
+     text-align: center;
+ }
+ 
+-.student-barcode-card svg {
+-    width: min(100%, 650px);
+-    height: auto;
+-    padding: 10px;
++.student-qr-image {
++    width: min(100%, 320px);
++    padding: 12px;
++    border: 1px solid #ebe5e0;
++    border-radius: 14px;
+     background: #fff;
++    box-sizing: border-box;
++}
++
++.student-qr-image svg {
++    display: block;
++    width: 100%;
++    height: auto;
+ }
+ 
+-.student-barcode-fallback {
++.student-qr-owner {
++    margin: 0;
++}
++
++.student-qr-fallback {
+     max-width: 100%;
++    margin: 0;
+     overflow-wrap: anywhere;
+     color: #555;
+     font-family: monospace;
++    font-size: 12px;
+ }
+ 
+ /* Attendance page layout */
+@@ -154,7 +168,7 @@
+     }
+ }
+ 
+-/* View My Barcode button */
++/* View My QR Code button */
+ .student-module-page>.section-heading>a.management-button {
+     flex-shrink: 0;
+     display: inline-flex;
+Only in /home/claude/work/for_testing-main/assets/css: ui-refresh.css
+diff -ru -x for_testing-main ./department-head/attendance/records.php /home/claude/work/for_testing-main/department-head/attendance/records.php
+--- ./department-head/attendance/records.php	2026-10-30 11:29:53.000000000 +0000
++++ /home/claude/work/for_testing-main/department-head/attendance/records.php	2026-10-30 11:53:40.509067398 +0000
+@@ -122,7 +122,7 @@
+         <a class="management-button management-button-secondary" href="<?= dhEscape($baseUrl) ?>/department-head/attendance-settings/index.php">Attendance rules</a>
+         <a class="management-button management-button-secondary" href="<?= dhEscape($baseUrl) ?>/department-head/appeals/index.php">Review appeals</a>
+         <?php if (strtolower($event['event_status']) === 'approved'): ?>
+-            <a class="management-button" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">Scan barcode</a>
++            <a class="management-button" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">Scan QR code</a>
+         <?php endif; ?>
+     </div>
+ 
+@@ -239,7 +239,7 @@
+                                     <?= $record['check_in_at'] ? dhEscape(date('M j, Y · g:i A', strtotime($record['check_in_at']))) : '—' ?>
+                                 </td>
+                                 <td data-label="Source">
+-                                    <?= $record['record_source'] ? dhEscape(ucwords(str_replace('_', ' ', $record['record_source']))) : '—' ?>
++                                    <?= $record['record_source'] ? dhEscape(ucwords(str_replace(['_', 'barcode'], [' ', 'QR code'], $record['record_source']))) : '—' ?>
+                                 </td>
+                                 <td data-label="Recorded by"><?= dhEscape($record['recorded_by'] ?: '—') ?></td>
+                                 <td data-label="Remarks"><?= dhEscape($record['remarks'] ?: '—') ?></td>
+diff -ru -x for_testing-main ./department-head/attendance/scan.php /home/claude/work/for_testing-main/department-head/attendance/scan.php
+--- ./department-head/attendance/scan.php	2026-10-30 11:29:53.000000000 +0000
++++ /home/claude/work/for_testing-main/department-head/attendance/scan.php	2026-10-30 11:53:17.743105193 +0000
+@@ -6,7 +6,7 @@
+ $eventId = filter_var($requestInput['event_id'] ?? null, FILTER_VALIDATE_INT);
+ if ($eventId === false || $eventId < 1) {
+     http_response_code(400);
+-    exit('Select a valid event to scan attendance barcodes.');
++    exit('Select a valid event to scan attendance QR codes.');
+ }
+ 
+ $eventStmt = $pdo->prepare(
+@@ -38,11 +38,11 @@
+     if (!dhVerifyCsrf($_POST['csrf_token'] ?? null)) {
+         $error = 'Your session token expired. Refresh this page and try again.';
+     } elseif (!$isApproved) {
+-        $error = 'Only approved events can receive barcode attendance.';
++        $error = 'Only approved events can receive QR attendance.';
+     } elseif (!$hasRules) {
+         $error = 'Configure attendance time rules for this event before scanning students.';
+     } elseif (!preg_match('/\A[a-fA-F0-9]{64}\z/', $barcode)) {
+-        $error = 'The scanned barcode is not a valid student barcode.';
++        $error = 'The scanned code is not a valid student QR code.';
+     } else {
+         try {
+             $pdo->beginTransaction();
+@@ -73,10 +73,10 @@
+ 
+             $now = $pdo->query('SELECT NOW()')->fetchColumn();
+             if ($now < $lockedEvent['start_at']) {
+-                throw new DomainException('Barcode check-in is not open yet. It opens at the event start time.');
++                throw new DomainException('QR check-in is not open yet. It opens at the event start time.');
+             }
+             if ($now > $lockedEvent['end_at'] || $now > $lockedEvent['absent_after']) {
+-                throw new DomainException('Barcode check-in is closed for this event.');
++                throw new DomainException('QR check-in is closed for this event.');
+             }
+ 
+             $studentStmt = $pdo->prepare(
+@@ -93,7 +93,7 @@
+             $studentStmt->execute([$barcode]);
+             $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
+             if (!$student) {
+-                throw new DomainException('This barcode does not match an enrolled student in your department.');
++                throw new DomainException('This QR code does not match an enrolled student in your department.');
+             }
+ 
+             $rosterStmt = $pdo->prepare(
+@@ -153,7 +153,7 @@
+                     'check_in_at' => $now,
+                     'record_source' => 'barcode',
+                 ], JSON_THROW_ON_ERROR),
+-                'Barcode attendance submitted by Department Head.',
++                'QR attendance submitted by Department Head.',
+             ]);
+ 
+             $pdo->commit();
+@@ -209,14 +209,14 @@
+ $recentStmt->execute([$eventId, $departmentId]);
+ $recentScans = $recentStmt->fetchAll(PDO::FETCH_ASSOC);
+ 
+-$pageTitle = 'Scan Attendance Barcode';
++$pageTitle = 'Scan Attendance QR Code';
+ require_once __DIR__ . '/../../includes/department_head_layout_start.php';
+ ?>
+ 
+ <section class="dashboard-section management-page barcode-scan-page">
+     <div class="section-heading">
+         <div>
+-            <h2>Scan Attendance Barcode</h2>
++            <h2>Scan Attendance QR Code</h2>
+             <p><?= dhEscape($event['event_title']) ?> · <?= dhEscape(date('M j, Y', strtotime($event['start_at']))) ?></p>
+         </div>
+         <a class="management-button management-button-secondary" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/records.php?event_id=<?= (int) $eventId ?>">View attendance records</a>
+@@ -252,11 +252,21 @@
+                 <div><dt>Absent cutoff / check-in closes</dt><dd><?= dhEscape(date('M j, g:i A', strtotime($event['absent_after']))) ?></dd></div>
+             </dl>
+             <p class="barcode-scan-guidance">
+-                Scan a student's barcode using a USB/Bluetooth barcode reader. The reader should enter the student's 64-character barcode token and send Enter. Scans through the present cutoff are Present; scans through the late cutoff are Late; scans after that through the absent cutoff are recorded Absent. Scanning closes after the absent cutoff. Duplicate scans are not recorded twice.
++                Scan a student's QR code with this device's camera, or with a USB/Bluetooth scanner that types the student's 64-character code and sends Enter. Scans through the present cutoff are Present; scans through the late cutoff are Late; scans after that through the absent cutoff are recorded Absent. Scanning closes after the absent cutoff. Duplicate scans are not recorded twice.
+             </p>
+-            <form class="barcode-scan-form" method="post" action="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">
++            <div class="qr-camera" id="qrCamera">
++                <div class="qr-camera-view" id="qrCameraView" hidden>
++                    <video id="qrVideo" playsinline muted></video>
++                    <span class="qr-camera-frame" aria-hidden="true"></span>
++                </div>
++                <p class="qr-camera-status" id="qrCameraStatus" role="status">Camera is off.</p>
++                <div class="qr-camera-actions">
++                    <button class="management-button" type="button" id="qrCameraToggle">Start camera</button>
++                </div>
++            </div>
++            <form class="barcode-scan-form" id="qrScanForm" method="post" action="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">
+                 <input type="hidden" name="csrf_token" value="<?= dhEscape(dhCsrfToken()) ?>">
+-                <label for="barcode">Student barcode</label>
++                <label for="barcode">Or enter / scan the student code</label>
+                 <input
+                     id="barcode"
+                     name="barcode"
+@@ -268,7 +278,6 @@
+                     maxlength="64"
+                     pattern="[a-fA-F0-9]{64}"
+                     required
+-                    autofocus
+                     value="<?= dhEscape($barcode) ?>">
+                 <button class="management-button" type="submit">Record scan</button>
+             </form>
+@@ -278,13 +287,13 @@
+     <div class="barcode-scan-monitor">
+         <div class="attendance-monitor-panel-heading">
+             <div>
+-                <h3>Recent barcode submissions</h3>
++                <h3>Recent QR submissions</h3>
+                 <p>Latest 15 scans for this department event, including the staff account that recorded each scan.</p>
+             </div>
+             <a class="management-link" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/records.php?event_id=<?= (int) $eventId ?>">Open full roster</a>
+         </div>
+         <?php if ($recentScans === []): ?>
+-            <div class="department-panel empty-state"><strong>No barcode scans yet</strong><p>Successful student scans will be listed here.</p></div>
++            <div class="department-panel empty-state"><strong>No QR scans yet</strong><p>Successful student scans will be listed here.</p></div>
+         <?php else: ?>
+             <div class="management-table-wrap">
+                 <table class="management-table">
+@@ -308,12 +317,122 @@
+ 
+ <?php require __DIR__ . '/../../includes/footer.php'; ?>
+ 
++<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+ <script>
+-    const barcodeInput = document.getElementById('barcode');
+-    if (barcodeInput) {
+-        barcodeInput.focus();
+-        barcodeInput.addEventListener('focus', () => barcodeInput.select());
+-    }
++    (() => {
++        const form = document.getElementById('qrScanForm');
++        const input = document.getElementById('barcode');
++        const toggle = document.getElementById('qrCameraToggle');
++        const view = document.getElementById('qrCameraView');
++        const video = document.getElementById('qrVideo');
++        const statusEl = document.getElementById('qrCameraStatus');
++        if (!form || !input || !toggle || !video) {
++            return;
++        }
++
++        const PREF_KEY = 'weamms_qr_camera';
++        const TOKEN_PATTERN = /^[a-fA-F0-9]{64}$/;
++        const canvas = document.createElement('canvas');
++        const context = canvas.getContext('2d', { willReadFrequently: true });
++        let stream = null;
++        let frameRequest = null;
++        let submitted = false;
++
++        const setStatus = (message) => { statusEl.textContent = message; };
++        const remember = (on) => {
++            try { window.localStorage.setItem(PREF_KEY, on ? '1' : '0'); } catch (error) { /* storage unavailable */ }
++        };
++
++        const stopCamera = () => {
++            if (frameRequest !== null) {
++                window.cancelAnimationFrame(frameRequest);
++                frameRequest = null;
++            }
++            if (stream) {
++                stream.getTracks().forEach((track) => track.stop());
++                stream = null;
++            }
++            video.srcObject = null;
++            view.hidden = true;
++            toggle.textContent = 'Start camera';
++        };
++
++        const tick = () => {
++            if (!stream || submitted) {
++                return;
++            }
++            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
++                canvas.width = video.videoWidth;
++                canvas.height = video.videoHeight;
++                context.drawImage(video, 0, 0, canvas.width, canvas.height);
++                const image = context.getImageData(0, 0, canvas.width, canvas.height);
++                const code = window.jsQR ? window.jsQR(image.data, image.width, image.height, { inversionAttempts: 'dontInvert' }) : null;
++                if (code) {
++                    const value = code.data.trim();
++                    if (TOKEN_PATTERN.test(value)) {
++                        submitted = true;
++                        input.value = value;
++                        setStatus('QR code read. Recording attendance…');
++                        stopCamera();
++                        form.submit();
++                        return;
++                    }
++                    setStatus('That QR code is not a WEAMMS student code. Keep scanning.');
++                }
++            }
++            frameRequest = window.requestAnimationFrame(tick);
++        };
++
++        const startCamera = async () => {
++            if (!window.jsQR) {
++                setStatus('The QR reader could not be loaded. Use the code field below instead.');
++                return;
++            }
++            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
++                setStatus('Camera access needs HTTPS (or localhost). Use the code field below instead.');
++                return;
++            }
++            try {
++                stream = await navigator.mediaDevices.getUserMedia({
++                    video: { facingMode: { ideal: 'environment' } },
++                    audio: false
++                });
++                video.srcObject = stream;
++                await video.play();
++                view.hidden = false;
++                toggle.textContent = 'Stop camera';
++                setStatus('Point the camera at the student\'s QR code.');
++                remember(true);
++                frameRequest = window.requestAnimationFrame(tick);
++            } catch (error) {
++                stopCamera();
++                setStatus('Camera unavailable or permission denied. Use the code field below instead.');
++            }
++        };
++
++        toggle.addEventListener('click', () => {
++            if (stream) {
++                stopCamera();
++                remember(false);
++                setStatus('Camera is off.');
++            } else {
++                startCamera();
++            }
++        });
++
++        window.addEventListener('pagehide', stopCamera);
++
++        input.addEventListener('focus', () => input.select());
++
++        // Keep scanning after each recorded student: restart the camera if it was on.
++        let wasOn = false;
++        try { wasOn = window.localStorage.getItem(PREF_KEY) === '1'; } catch (error) { /* ignore */ }
++        if (wasOn) {
++            startCamera();
++        } else {
++            input.focus();
++        }
++    })();
+ </script>
+ 
+ </main>
+diff -ru -x for_testing-main ./department-head/dashboard.php /home/claude/work/for_testing-main/department-head/dashboard.php
+--- ./department-head/dashboard.php	2026-10-30 11:29:52.000000000 +0000
++++ /home/claude/work/for_testing-main/department-head/dashboard.php	2026-10-30 11:55:04.303337083 +0000
+@@ -232,6 +232,9 @@
+         href="<?= $baseUrl ?>/assets/css/department-head-sidebar.css">
+ 
+     <link rel="stylesheet"
++        href="<?= $baseUrl ?>/assets/css/ui-refresh.css">
++
++    <link rel="stylesheet"
+         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+ </head>
+ 
+@@ -241,11 +244,6 @@
+ 
+     <main class="dashboard-main">
+ 
+-        <?php
+-        $userRole = 'Department Head';
+-        require_once __DIR__ . '/../includes/header.php';
+-        ?>
+-
+         <?php if ($databaseWarning): ?>
+             <div class="dashboard-alert">
+                 Dashboard information could not be loaded.
+diff -ru -x for_testing-main ./docs/ARCHITECTURE.md /home/claude/work/for_testing-main/docs/ARCHITECTURE.md
+--- ./docs/ARCHITECTURE.md	2026-10-30 11:29:52.000000000 +0000
++++ /home/claude/work/for_testing-main/docs/ARCHITECTURE.md	2026-10-30 11:55:22.465139722 +0000
+@@ -20,20 +20,20 @@
+ | Student | `includes/student_layout_start.php` → `includes/sidebar.php` (menu array per role, `student-sidebar`) | all student pages |
+ | Dept head, shell | `includes/department_head_shell_start.php` / `_end.php` | attendance-settings, attendance/index, department/index, events/index, students/index |
+ | Dept head, older layout | `includes/department_head_layout_start.php` | appeals/index, appeals/view, attendance/{correct,history,records,scan}, events/{create,edit,view}, reports/index |
+-| Dept head, self-contained | builds its own `<head>` and includes `department_head_sidebar.php`, `header.php`, `footer.php` | dashboard.php |
++| Dept head, self-contained | builds its own `<head>` and includes `department_head_sidebar.php`, `footer.php` (top bar `header.php` no longer included) | dashboard.php |
+ | Dept head, no HTML | POST/download endpoints | events/request, events/cancel, appeals/decision, appeals/evidence, students/export, department/update |
+ 
+ Both department-head layouts include `department_head_sidebar.php` (single sidebar, menu array inside the file). `includes/sidebar.php` also still holds a `department_head` menu but only the student layout includes it.
+ 
+ ## Page map
+ **Admin** (sidebar: Dashboard, Students, Department Heads, Departments, Events, Attendance, Reports, Security; "Academic Periods" link removed 2026-10-30, the 501 placeholder files remain)
+-- `dashboard.php`; `students/` index, create, edit, save, update, delete, status, reset-password, regenerate-barcode, export; `department-heads/` index, create, edit, delete, permissions; `departments/` index, create, edit, save, update, view, status; `events/` index, view, action (approve/reject/cancel), change-action (review change requests), export; `attendance/` index (+ `history.php`); `reports/` index, export; `security/index.php`; `academic-periods/*` (501 placeholder, but linked).
++- `dashboard.php`; `students/` index, create, edit, save, update, delete, status, reset-password, regenerate-barcode (UI says QR code), export; `department-heads/` index, create, edit, delete, permissions; `departments/` index, create, edit, save, update, view, status; `events/` index, view, action (approve/reject/cancel), change-action (review change requests), export; `attendance/` index (+ `history.php`); `reports/` index, export; `security/index.php`; `academic-periods/*` (501 placeholder, but linked).
+ 
+ **Department head** (sidebar: Dashboard, Students, Department, Events, Attendance, Time Rules, Appeals, Reports)
+ - `dashboard.php`; `students/` index, export; `department/` index, update; `events/` index, create, edit, view, request (change request), cancel; `attendance/` index, scan, records, correct, history; `attendance-settings/index.php`; `appeals/` index, view, decision, evidence; `reports/index.php`.
+ 
+ **Student** (sidebar: Dashboard, Event Schedules, My Attendance, Reports and Analytics, Attendance Appeals)
+-- `dashboard.php`; `events/` index, view; `attendance/` index, history, scan (shows own barcode); `appeals/` index, view, create, edit, withdraw, evidence; `reports/index.php`; `profile/index.php` (501 placeholder, not in the sidebar).
++- `dashboard.php`; `events/` index, view; `attendance/` index, history, scan (shows own QR code); `appeals/` index, view, create, edit, withdraw, evidence; `reports/index.php`; `profile/index.php` (501 placeholder, not in the sidebar).
+ 
+ **Auth**: `index.php` redirects to `auth/student-login.php`; `auth/{admin,department-head,student}-login.php`, `logout.php`; `forgot-password.php` is a 501 placeholder.
+ 
+@@ -41,4 +41,4 @@
+ Exactly these 48 files: `api/**` (25), `classes/**` (8), `reports/**` (4), `includes/{auth,csrf,functions,role_guard}.php`, `config/constants.php`, `auth/forgot-password.php`, `student/profile/index.php`, `admin/academic-periods/{index,create,edit,delete}.php`. Real logic never lives there.
+ 
+ ## Front end
+-Hand-written CSS in `assets/css/` (no build step). `assets/js/attendance-charts.js` (Chart.js) and `attendance.js`, `login.js`. Font Awesome, Chart.js and JsBarcode load from CDNs. Unlinked legacy CSS: `theme.css`, `theme-refresh.css`, `minimal-direct.css`.
++Hand-written CSS in `assets/css/` (no build step). `assets/js/attendance-charts.js` (Chart.js) and `attendance.js`, `login.js`. Font Awesome, Chart.js, qrcode-generator (student QR) and jsQR (dept-head scanner) load from CDNs. `assets/css/ui-refresh.css` is the shared cross-role look, linked last in every layout. Unlinked legacy CSS: `theme.css`, `theme-refresh.css`, `minimal-direct.css`.
+diff -ru -x for_testing-main ./docs/PROJECT_CONTEXT.md /home/claude/work/for_testing-main/docs/PROJECT_CONTEXT.md
+--- ./docs/PROJECT_CONTEXT.md	2026-10-30 11:34:58.000000000 +0000
++++ /home/claude/work/for_testing-main/docs/PROJECT_CONTEXT.md	2026-10-30 11:55:22.464377077 +0000
+@@ -10,7 +10,7 @@
+ - Config from server environment variables (`WEAMMS_ENV`, `WEAMMS_DB_*`, `WEAMMS_TIMEZONE`); `.env` is not auto-loaded. Timezone `Asia/Manila` (default) or `UTC`.
+ - Install: import `database/wis_event_attendance.sql`, create first admin with `php scripts/create-admin.php` (CLI, env vars `WEAMMS_INITIAL_ADMIN_*`). Upgrades: apply `database/migrations/` in date order. `demo_seed.sql` is for disposable test DBs only.
+ - Optional scheduler: `php scripts/finalize-events.php` every 5 minutes.
+-- Frontend: hand-written CSS (`assets/css/`), Font Awesome / Chart.js / JsBarcode from CDNs, fonts Roboto + Cinzel.
++- Frontend: hand-written CSS (`assets/css/`), Font Awesome / Chart.js / qrcode-generator / jsQR from CDNs, fonts Roboto + Cinzel.
+ 
+ ## Folder map
+ `admin/` · `department-head/` · `student/` (role pages) · `auth/` (3 login pages + logout) · `includes/` (role context + layout files, `event_lifecycle.php`, `login_rate_limit.php`) · `assets/{css,js,images}` · `database/` · `scripts/` · `uploads/student-appeals/` (private evidence).
+@@ -23,9 +23,9 @@
+ - Student: `studentEscape`, `studentCsrfToken`/`studentVerifyCsrf`; vars `$studentPageTitle`, `$studentPageCss`.
+ 
+ ## Features (all present in code)
+-- **Admin**: dashboard (pending-requests strip, KPI links, attendance by department, today's events, requests to review, recent activity); students CRUD/status/password reset/barcode regenerate/CSV; department heads CRUD + permissions; departments CRUD; events (approve/reject/cancel, review change requests, export); attendance monitoring (status overview + filters + integrity check) and change history; reports (4 types; KPI cards + main chart + status donut + table; CSV, print); security (read-only: rate limits, locked accounts, activity log); activity logging.
+-- **Department head**: dashboard; students (own dept, CSV); department edit (needs `department_head_can_edit`); events create/edit/cancel/request change (admin approves); Time Rules per event; barcode scan, records, history, correction (needs `department_head_can_edit_attendance`); appeals review (approval writes attendance with source `appeal` + audit log); reports.
+-- **Student**: dashboard, events, attendance + history, own barcode page (students do not self check-in), appeals with evidence upload, personal reports.
++- **Admin**: dashboard (pending-requests strip, KPI links, attendance by department, today's events, requests to review, recent activity); students CRUD/status/password reset/QR regenerate/CSV; department heads CRUD + permissions; departments CRUD; events (approve/reject/cancel, review change requests, export); attendance monitoring (status overview + filters + integrity check) and change history; reports (4 types; KPI cards + main chart + status donut + table; CSV, print); security (read-only: rate limits, locked accounts, activity log); activity logging.
++- **Department head**: dashboard; students (own dept, CSV); department edit (needs `department_head_can_edit`); events create/edit/cancel/request change (admin approves); Time Rules per event; QR scan (camera or USB/Bluetooth scanner), records, history, correction (needs `department_head_can_edit_attendance`); appeals review (approval writes attendance with source `appeal` + audit log); reports.
++- **Student**: dashboard, events, attendance + history, own QR code page (students do not self check-in), appeals with evidence upload, personal reports.
+ - **Backend**: `synchronizeEventLifecycle()` completes approved events past `end_at` and inserts system `absent` rows for roster students without a record; login rate limiting (5 failures per user+IP / 30 per IP / 15 min); CSRF everywhere; event rosters snapshotted.
+ - Statuses — events: pending, approved, rejected, cancelled, cancellation_requested, completed. Attendance: present, late, absent, excused (sources: barcode, department_head, appeal, system). Appeals: pending, approved, rejected, withdrawn.
+ 
+@@ -35,8 +35,14 @@
+ ## UI rules
+ Maroon sidebar (don't change it or its collapse behaviour unless asked); Roboto text + Cinzel brand headings; reuse `ad-*` components and the shared stylesheets; no per-page one-off styles. Brand maroon `#8B1E1E`, gold `#F2C300`, admin background `#f3f0ed`. Admin Attendance/Reports/Security use `admin-refresh.css` (`.admin-refresh` scope); no yellow bar before panel titles anywhere; admin sidebar has no "Academic Periods" item (module still a 501 placeholder). Admin Attendance has a "Status overview" (proportion bar + clickable status filters) at the bottom of the records panel instead of five summary cards; the records table scrolls in a fixed-height area (`.admin-records-scroll`) and the filter bar is compact (`.admin-filters-compact`, `admin-filter-button-sm`).
+ 
++## QR attendance (changed 2026-10-30)
++Barcodes were replaced by QR codes in the UI. The QR encodes the same 64-hex `students.barcode_token`, so existing tokens keep working; the column name, the `record_source = 'barcode'` value and the `barcode_scan` audit action were intentionally NOT renamed (no migration). Screens show it as "QR code". Student page `student/attendance/scan.php` draws the QR (qrcode-generator). Dept-head `department-head/attendance/scan.php` reads QR codes with the device camera (jsQR + `getUserMedia`; needs HTTPS or localhost; auto-restarts after each scan via `localStorage` key `weamms_qr_camera`) and still accepts a typed/USB-scanned token in the same CSRF-protected POST form.
++
++## Shared look (changed 2026-10-30)
++`assets/css/ui-refresh.css` is linked last by every layout (admin, dept-head shell, dept-head older layout, dept-head dashboard, student). The student and older dept-head pages no longer render the `includes/header.php` top bar (the file remains, now unused); the student sidebar shows the account name above Logout and is 249px like the others, collapsing to a 72px rail at <=760px. Not browser-tested.
++
+ ## Known limitations
+-Academic Periods module, student profile and forgot-password are placeholders (periods must be managed in the DB, and other features depend on them). No automated tests; no Git repo in the uploaded copy. `.htaccess` sets `WEAMMS_ENV development` — override in production. Legacy unlinked CSS: `theme.css`, `theme-refresh.css`, `minimal-direct.css`. Recent UI changes (fonts, logout buttons, Time Rules inputs, admin refresh, Attendance status overview) are not yet browser-tested.
++Academic Periods module, student profile and forgot-password are placeholders (periods must be managed in the DB, and other features depend on them). No automated tests; no Git repo in the uploaded copy. `.htaccess` sets `WEAMMS_ENV development` — override in production. Legacy unlinked CSS: `theme.css`, `theme-refresh.css`, `minimal-direct.css`. Recent UI changes (QR scanning, shared `ui-refresh.css` look, fonts, logout buttons, Time Rules inputs, admin refresh, Attendance status overview) are not yet browser-tested.
+ 
+ ## How to work on this project
+ Inspect the real files you will touch and the includes/CSS they use; make the smallest coherent change; keep routes, permissions, CSRF and unrelated features; run `php -l` on changed PHP where PHP exists, otherwise say it was not run; never print secrets; add a new dated migration instead of editing applied ones; update docs only when state or durable rules change.
+diff -ru -x for_testing-main ./docs/PROJECT_STATUS.md /home/claude/work/for_testing-main/docs/PROJECT_STATUS.md
+--- ./docs/PROJECT_STATUS.md	2026-10-30 11:29:52.000000000 +0000
++++ /home/claude/work/for_testing-main/docs/PROJECT_STATUS.md	2026-10-30 11:55:32.473261917 +0000
+@@ -3,9 +3,14 @@
+ Last updated: 2026-10-30 (second session). Evidence level: source code was read; **nothing was executed or browser-tested** (no PHP in the review environment; no automated tests exist).
+ 
+ ## Verified completed (present in code)
+-See `docs/SYSTEM_FEATURES.md` for the full list. In short: all three role portals (admin, department head, student), event request/approval workflow, barcode attendance with Time Rules, appeals with evidence upload, attendance correction + audit log, CSV exports, login rate limiting, event lifecycle auto-completion.
++See `docs/SYSTEM_FEATURES.md` for the full list. In short: all three role portals (admin, department head, student), event request/approval workflow, QR attendance with Time Rules, appeals with evidence upload, attendance correction + audit log, CSV exports, login rate limiting, event lifecycle auto-completion.
+ 
+-## Changes made in the latest session (not yet browser-tested)
++## Session 3 (2026-10-30) — QR scanning + shared look (not yet browser-tested; `php -l` not run, no PHP available)
++- **Barcode → QR**: `student/attendance/scan.php` now renders a QR (qrcode-generator 1.4.4) of the existing `barcode_token`; `department-head/attendance/scan.php` adds a camera scanner (jsQR 1.4.0) that posts the token through the unchanged POST/CSRF/Time-Rules logic, keeping the typed/USB-reader field as a fallback. Labels changed in student, dept-head and admin pages; attendance source `barcode` is displayed as "QR code". DB column, enum value, audit action and file name `regenerate-barcode.php` deliberately unchanged. Camera needs HTTPS or localhost.
++- **Shared look**: new `assets/css/ui-refresh.css` linked last in all layouts. Student: warm `#f3f0ed` background, top bar removed (`includes/student_layout_start.php`), account name in sidebar (`includes/sidebar.php`), 249px sidebar with 72px rail at <=760px, 30px titles with divider, 14px bordered panels/cards, tinted uppercase table headers with zebra rows. Dept-head older layout and dashboard: top bar removed, same panel/heading/table styling. Admin `.ad-*` pages and dept-head shell pages: same heading/card/table values as the refreshed admin pages. `includes/header.php` is now unused.
++- Unverified: visual result of all of the above, camera behaviour on real devices, and whether any page-specific CSS overrides the new rules.
++
++## Changes made in the earlier session (not yet browser-tested)
+ - **Fonts unified**: Roboto (text) + Cinzel (brand headings) now linked in all 8 page heads (admin, department head x3, student, three login pages). `Inter` (never loaded) and Arial primary stacks replaced with Roboto in `style.css`, `admin.css`, `department-head.css`, `header.css`, `student/student.css`, `department-head-sidebar.css`.
+ - **Time Rules**: single-day events show time-only inputs; server adds the event's date. Relies on `dhParseLocalDateTime()` accepting `YYYY-MM-DDTHH:MM`.
+ - **Logout button unified**: admin and department head sidebars now use the student-style logout (full-width row, icon + "Logout", white hover). Previously both were a small underlined "Log out" link. Markup in `includes/admin_layout_start.php` and `includes/department_head_sidebar.php`; styles in `.admin-logout` of `admin.css` and `department-head-sidebar.css`.
+diff -ru -x for_testing-main ./docs/SYSTEM_FEATURES.md /home/claude/work/for_testing-main/docs/SYSTEM_FEATURES.md
+--- ./docs/SYSTEM_FEATURES.md	2026-10-30 11:29:52.000000000 +0000
++++ /home/claude/work/for_testing-main/docs/SYSTEM_FEATURES.md	2026-10-30 11:55:32.472734613 +0000
+@@ -21,12 +21,12 @@
+ - **Dashboard** (summary cards, Chart.js usage), **Students** (own department, CSV export), **Department** (edit only if `department_head_can_edit`=1).
+ - **Events**: create/edit/view/cancel/request-change. Validation in `dhValidateEventSubmission` (title ≤200, venue ≤200, within academic period, participants by student/year level/section). Approval is by admin.
+ - **Time Rules** (`attendance-settings/index.php`): per approved event, set present-until, late-until, closing times; must be ordered and inside the event window. Single-day events use time-only inputs (date added server-side); multi-day events use full date-time.
+-- **Attendance**: scan barcode (64-hex token) for an approved event → status present/late by rules; records list; history; correct attendance only if `department_head_can_edit_attendance`=1; audit log in `attendance_audit_logs`.
++- **Attendance**: scan student QR code (camera, or USB/Bluetooth scanner typing the 64-hex token) for an approved event → status present/late by rules; records list; history; correct attendance only if `department_head_can_edit_attendance`=1; audit log in `attendance_audit_logs`.
+ - **Appeals**: review student appeals, approve/reject; approval updates attendance with `record_source='appeal'` and logs the change; evidence viewing.
+ - **Reports** page (department-head/reports/index.php) — present and uses Chart.js; **needs verification** of data accuracy.
+ 
+ ## Student — verified in code
+-- **Dashboard**, **Events** (events for the student's department/participants), **Attendance** history, **My barcode** (`attendance/scan.php` displays the student's CODE128 barcode; students do not self-check-in), **Appeals** (create, edit, withdraw, view, upload evidence to private `uploads/student-appeals`), **Reports** (personal).
++- **Dashboard**, **Events** (events for the student's department/participants), **Attendance** history, **My QR code** (`attendance/scan.php` draws the student's QR code (encodes `barcode_token`); students do not self-check-in), **Appeals** (create, edit, withdraw, view, upload evidence to private `uploads/student-appeals`), **Reports** (personal).
+ - Placeholder (501): **Profile** (`student/profile/index.php`).
+ 
+ ## Backend behavior — verified in code
+diff -ru -x for_testing-main ./docs/UI_GUIDELINES.md /home/claude/work/for_testing-main/docs/UI_GUIDELINES.md
+--- ./docs/UI_GUIDELINES.md	2026-10-30 11:29:52.000000000 +0000
++++ /home/claude/work/for_testing-main/docs/UI_GUIDELINES.md	2026-10-30 11:55:32.473445666 +0000
+@@ -35,6 +35,9 @@
+ ## Admin event view page (`admin/events/view.php`, `admin-event-view.css`)
+ - No top bar: the search box, notification bell, user menu/logout and the divider line under them were removed on 2026-10-30. The page starts with the "Back to events" link. Logout remains in the sidebar. Do not re-add `.ev-topbar` unless asked.
+ 
++## Shared look (`assets/css/ui-refresh.css`, added 2026-10-30)
++Loaded last by every layout. Tokens `--ui-bg #f3f0ed`, `--ui-border #ebe5e0`, `--ui-tint #faf7f4`, `--ui-radius 14px`, `--ui-shadow`. Applies to `.ad-*` (admin + dept-head shell), `body.department-head-dashboard-page` (older dept-head layout/dashboard) and `body.student-dashboard-page`. No top bar on any portal (`includes/header.php` is unused); the account name lives in each sidebar above Logout. Student sidebar is 249px (72px rail at <=760px). Add cross-role visual changes here, not in per-role files.
++
+ ## Rules
+ - Reuse existing classes; add new styles to the matching shared stylesheet, not inline.
+ - Keep department head and admin sidebars visually consistent.
+diff -ru -x for_testing-main ./includes/admin_layout_start.php /home/claude/work/for_testing-main/includes/admin_layout_start.php
+--- ./includes/admin_layout_start.php	2026-10-30 11:29:49.000000000 +0000
++++ /home/claude/work/for_testing-main/includes/admin_layout_start.php	2026-10-30 11:54:59.068448146 +0000
+@@ -67,6 +67,7 @@
+     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+     <link rel="stylesheet" href="<?= adminEscape($adminBaseUrl) ?>/assets/css/style.css">
+     <link rel="stylesheet" href="<?= adminEscape($adminBaseUrl) ?>/assets/css/admin.css">
++    <link rel="stylesheet" href="<?= adminEscape($adminBaseUrl) ?>/assets/css/ui-refresh.css">
+     <?php if (!empty($adminRefreshCss)): ?>
+         <link rel="stylesheet" href="<?= adminEscape($adminBaseUrl) ?>/assets/css/admin-refresh.css">
+     <?php endif; ?>
+diff -ru -x for_testing-main ./includes/department_head_layout_start.php /home/claude/work/for_testing-main/includes/department_head_layout_start.php
+--- ./includes/department_head_layout_start.php	2026-10-30 11:29:49.000000000 +0000
++++ /home/claude/work/for_testing-main/includes/department_head_layout_start.php	2026-10-30 11:54:59.068313774 +0000
+@@ -25,10 +25,10 @@
+     <?php if (!empty($pageCss)): ?>
+         <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/<?= dhEscape($pageCss) ?>">
+     <?php endif; ?>
++    <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/ui-refresh.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+ </head>
+ 
+ <body class="department-head-dashboard-page <?= dhEscape($pageClass ?? '') ?>">
+     <?php require __DIR__ . '/department_head_sidebar.php'; ?>
+     <main class="dashboard-main">
+-        <?php require __DIR__ . '/header.php'; ?>
+diff -ru -x for_testing-main ./includes/department_head_shell_start.php /home/claude/work/for_testing-main/includes/department_head_shell_start.php
+--- ./includes/department_head_shell_start.php	2026-10-30 11:29:50.000000000 +0000
++++ /home/claude/work/for_testing-main/includes/department_head_shell_start.php	2026-10-30 11:54:59.068594235 +0000
+@@ -75,6 +75,7 @@
+     <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/admin.css">
+     <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/department-head-sidebar.css">
+     <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/department-head-shell.css">
++    <link rel="stylesheet" href="<?= dhEscape($baseUrl) ?>/assets/css/ui-refresh.css">
+ </head>
+ 
+ <body class="admin-dashboard-page department-head-shell <?= dhEscape($pageClass) ?>">
+diff -ru -x for_testing-main ./includes/sidebar.php /home/claude/work/for_testing-main/includes/sidebar.php
+--- ./includes/sidebar.php	2026-10-30 11:29:51.000000000 +0000
++++ /home/claude/work/for_testing-main/includes/sidebar.php	2026-10-30 11:54:59.068067155 +0000
+@@ -80,6 +80,10 @@
+     </nav>
+ 
+     <div class="sidebar-bottom">
++        <div class="student-sidebar-user">
++            <strong><?= htmlspecialchars((string) ($_SESSION['username'] ?? 'Student')) ?></strong>
++            <span><?= htmlspecialchars(ucwords(str_replace('_', ' ', $role))) ?></span>
++        </div>
+         <a href="<?= htmlspecialchars($logoutUrl) ?>" class="logout-link">
+             <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+             <span>Logout</span>
+diff -ru -x for_testing-main ./includes/student_layout_start.php /home/claude/work/for_testing-main/includes/student_layout_start.php
+--- ./includes/student_layout_start.php	2026-10-30 11:29:50.000000000 +0000
++++ /home/claude/work/for_testing-main/includes/student_layout_start.php	2026-10-30 11:54:59.067907036 +0000
+@@ -27,14 +27,11 @@
+             href="<?= studentEscape($studentBaseUrl) ?>/assets/css/student/<?= studentEscape($studentPageCss) ?>">
+     <?php endif; ?>
+ 
++    <link rel="stylesheet" href="<?= studentEscape($studentBaseUrl) ?>/assets/css/ui-refresh.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+ </head>
+ 
+ <body class="student-dashboard-page">
+     <?php require __DIR__ . '/sidebar.php'; ?>
+ 
+-    <main class="dashboard-main student-module-main">
+-        <?php
+-        $userRole = 'Student';
+-        require __DIR__ . '/header.php';
+-        ?>
+\ No newline at end of file
++    <main class="dashboard-main student-module-main">
+\ No newline at end of file
+diff -ru -x for_testing-main ./student/attendance/index.php /home/claude/work/for_testing-main/student/attendance/index.php
+--- ./student/attendance/index.php	2026-10-30 11:29:51.000000000 +0000
++++ /home/claude/work/for_testing-main/student/attendance/index.php	2026-10-30 11:53:00.680201632 +0000
+@@ -41,9 +41,9 @@
+     <div class="section-heading">
+         <div>
+             <h2>My Attendance</h2>
+-            <p>View your personal event attendance and present your barcode at an authorized station.</p>
++            <p>View your personal event attendance and show your QR code at an authorized station.</p>
+         </div>
+-        <a class="management-button" href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/scan.php">View My Barcode</a>
++        <a class="management-button" href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/scan.php">View My QR Code</a>
+     </div>
+     <div class="student-attendance-stats student-attendance-summary">
+         <div>
+diff -ru -x for_testing-main ./student/attendance/scan.php /home/claude/work/for_testing-main/student/attendance/scan.php
+--- ./student/attendance/scan.php	2026-10-30 11:29:51.000000000 +0000
++++ /home/claude/work/for_testing-main/student/attendance/scan.php	2026-10-30 11:52:56.083183834 +0000
+@@ -2,48 +2,48 @@
+ 
+ require_once __DIR__ . '/../../includes/student_context.php';
+ 
+-$studentPageTitle = 'Scan Attendance';
++$studentPageTitle = 'My QR Code';
+ $studentPageCss = 'student-attendance.css';
+ 
+ require_once __DIR__ . '/../../includes/student_layout_start.php';
+ 
+-$barcodeToken = $studentProfile['barcode_token'];
++// The QR code encodes the same unique 64-character token that was previously
++// shown as a barcode (students.barcode_token), so existing tokens stay valid.
++$qrToken = $studentProfile['barcode_token'];
+ ?>
+ 
+ <section class="dashboard-section student-module-page">
+     <div class="section-heading">
+         <div>
+-            <h2>My Attendance Barcode</h2>
+-            <p>Present this barcode at an authorized attendance station for an event in your department.</p>
++            <span class="student-eyebrow">Student · Attendance</span>
++            <h2>My Attendance QR Code</h2>
++            <p>Show this QR code to an authorized attendance station for an event in your department.</p>
+         </div>
+-        <button class="management-button management-button-secondary" type="button" onclick="window.print()">Print barcode</button>
++        <button class="management-button management-button-secondary" type="button" onclick="window.print()">Print QR code</button>
+     </div>
+-    <article class="student-content-panel student-barcode-card">
+-        <p><strong><?= studentEscape(studentName($studentProfile)) ?></strong> · <?= studentEscape($studentProfile['student_number']) ?></p>
+-        <svg id="studentBarcode" aria-label="Your unique student attendance barcode"></svg>
+-        <p class="student-barcode-fallback"><?= studentEscape($barcodeToken) ?></p>
+-        <p class="student-muted">This barcode identifies only your student account. It cannot directly change attendance; an authorized staff member must scan it at the event attendance station.</p>
+-        <div id="barcodeError" class="management-alert" role="alert" hidden>Barcode display could not be loaded. Show the token above to an authorized attendance staff member.</div>
++    <article class="student-content-panel student-qr-card">
++        <p class="student-qr-owner"><strong><?= studentEscape(studentName($studentProfile)) ?></strong> · <?= studentEscape($studentProfile['student_number']) ?></p>
++        <div id="studentQr" class="student-qr-image" role="img" aria-label="Your unique student attendance QR code"></div>
++        <p class="student-qr-fallback"><?= studentEscape($qrToken) ?></p>
++        <p class="student-muted">This QR code identifies only your student account. It cannot directly change attendance; an authorized staff member must scan it at the event attendance station.</p>
++        <div id="qrError" class="management-alert" role="alert" hidden>The QR code could not be displayed. Show the code above to an authorized attendance staff member.</div>
+     </article>
+ </section>
+-<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
++<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+ <script>
+     (() => {
+-        const token = <?= json_encode($barcodeToken, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
+-        const barcode = document.getElementById('studentBarcode');
++        const token = <?= json_encode($qrToken, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>;
++        const target = document.getElementById('studentQr');
+         try {
+-            if (!window.JsBarcode || !barcode) {
+-                throw new Error('Barcode renderer is unavailable.');
++            if (typeof window.qrcode !== 'function' || !target) {
++                throw new Error('QR renderer is unavailable.');
+             }
+-            window.JsBarcode(barcode, token, {
+-                format: 'CODE128',
+-                displayValue: true,
+-                fontSize: 15,
+-                height: 90,
+-                margin: 12
+-            });
++            const qr = window.qrcode(0, 'M');
++            qr.addData(token);
++            qr.make();
++            target.innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4, scalable: true });
+         } catch (error) {
+-            document.getElementById('barcodeError').hidden = false;
++            document.getElementById('qrError').hidden = false;
+         }
+     })();
+ </script>
+@@ -51,4 +51,4 @@
+ </main>
+ </body>
+ 
+-</html>
+\ No newline at end of file
++</html>
+diff -ru -x for_testing-main ./student/events/view.php /home/claude/work/for_testing-main/student/events/view.php
+--- ./student/events/view.php	2026-10-30 11:29:51.000000000 +0000
++++ /home/claude/work/for_testing-main/student/events/view.php	2026-10-30 11:53:00.680501247 +0000
+@@ -101,7 +101,7 @@
+                     <li>Absent cutoff / attendance closing: <?= studentEscape(studentDateTime($event['absent_after'])) ?></li>
+                 </ul>
+             <?php else: ?>
+-                <p>Attendance time rules have not been published for this event. Present your barcode at an authorized attendance station during the event.</p>
++                <p>Attendance time rules have not been published for this event. Show your QR code at an authorized attendance station during the event.</p>
+             <?php endif; ?>
+         </section>
+         <?php if ($event['event_status'] === 'cancellation_requested'): ?>

@@ -1,7 +1,5 @@
 <?php
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/app.php';
 
@@ -12,17 +10,9 @@ $role = strtolower($_SESSION['role_name'] ?? $_SESSION['role'] ?? '');
 $role = str_replace([' ', '-'], '_', $role);
 
 $menus = [
-    'admin' => [
-        ['Dashboard', 'fa-house', '/admin/dashboard.php'],
-        ['User Management', 'fa-users', '/admin/students/index.php'],
-        ['Department Management', 'fa-building', '/admin/departments/index.php'],
-        ['Event Management', 'fa-calendar-days', '/admin/events/index.php'],
-        ['Attendance Monitoring', 'fa-clipboard-check', '/admin/attendance/index.php'],
-        ['Reports and Analytics', 'fa-chart-column', '/admin/reports/index.php'],
-    ],
-
     'department_head' => [
         ['Dashboard', 'fa-house', '/department-head/dashboard.php'],
+        ['Students', 'fa-user-group', '/department-head/students/index.php'],
         ['Department Management', 'fa-building', '/department-head/department/index.php'],
         ['Event Management', 'fa-calendar-days', '/department-head/events/index.php'],
         ['Attendance Monitoring', 'fa-clipboard-check', '/department-head/attendance/index.php'],
@@ -90,6 +80,10 @@ $logoutUrl = $baseUrl . '/auth/logout.php';
     </nav>
 
     <div class="sidebar-bottom">
+        <div class="student-sidebar-user">
+            <strong><?= htmlspecialchars((string) ($_SESSION['username'] ?? 'Student')) ?></strong>
+            <span><?= htmlspecialchars(ucwords(str_replace('_', ' ', $role))) ?></span>
+        </div>
         <a href="<?= htmlspecialchars($logoutUrl) ?>" class="logout-link">
             <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
             <span>Logout</span>

@@ -1,0 +1,282 @@
+/* Minimal & Direct interface refresh for WEAMMS.
+   Keeps the school's maroon-and-gold identity while reducing visual noise. */
+:root {
+    --ui-ink: #292524;
+    --ui-muted: #6B7280;
+    --ui-paper: #FFFFFF;
+    --ui-page: #F8F7F6;
+    --ui-border: #E5E7EB;
+    --ui-brand: var(--wis-maroon, #8B1E1E);
+    --ui-brand-dark: var(--wis-maroon-dark, #641414);
+    --ui-accent: var(--wis-gold, #F2C300);
+    --ui-focus: #2563EB;
+    --ui-radius: 8px;
+    --ui-shadow: 0 1px 3px rgba(17, 24, 39, .06);
+}
+
+html { scroll-behavior: smooth; }
+body {
+    color: var(--ui-ink);
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    line-height: 1.6;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Quiet, consistent interaction states */
+a, button, input, select, textarea, [role="button"] {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--ui-focus);
+    outline-offset: 3px;
+}
+button, input, select, textarea { font: inherit; }
+input, select, textarea {
+    border-color: var(--ui-border);
+    border-radius: var(--ui-radius);
+}
+input:focus, select:focus, textarea:focus {
+    border-color: var(--ui-brand);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-brand) 14%, transparent);
+}
+
+/* Keep the existing WIS maroon/gold palette; simplify the surrounding surfaces. */
+.admin-dashboard-page,
+.department-head-dashboard-page,
+.student-dashboard-page {
+    background: var(--ui-page);
+    color: var(--ui-ink);
+    line-height: 1.6;
+}
+.dashboard-main { min-width: 0; }
+.dashboard-topbar {
+    box-shadow: none;
+    border-bottom: 1px solid var(--ui-border);
+}
+.dashboard-topbar h1,
+.admin-page-heading h2,
+.section-heading h2,
+.student-page-heading h1,
+.student-page-heading h2 {
+    letter-spacing: -.025em;
+    line-height: 1.25;
+}
+.eyebrow {
+    color: var(--ui-muted);
+    letter-spacing: .06em;
+}
+
+/* Panels: flatter surfaces, restrained borders, less decoration */
+.admin-panel,
+.student-content-panel,
+.department-chart-panel,
+.attendance-monitor-panel,
+.management-card,
+.student-card,
+.report-card,
+.stat-card,
+.dashboard-card {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+}
+.admin-panel h2,
+.student-content-panel h2,
+.department-chart-panel h2,
+.attendance-monitor-panel h2 { letter-spacing: -.015em; }
+
+/* Tables remain information-dense, but become easier to scan. */
+.admin-table,
+.management-table,
+.student-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+.admin-table th,
+.management-table th,
+.student-table th {
+    font-weight: 650;
+    color: var(--ui-muted);
+}
+.admin-table td,
+.management-table td,
+.student-table td {
+    border-bottom-color: var(--ui-border);
+}
+.admin-table tbody tr:hover,
+.management-table tbody tr:hover,
+.student-table tbody tr:hover { background: #FAFAFA; }
+
+/* Buttons keep their existing brand colors and purpose. */
+button, .btn, .button, [role="button"] { border-radius: var(--ui-radius); }
+.btn, .button { box-shadow: none; }
+.btn:hover, .button:hover { filter: brightness(.97); }
+.btn:active, .button:active { transform: translateY(1px); }
+
+/* Login screens: preserve existing branding and simplify heavy shadows. */
+.container {
+    border: 1px solid var(--ui-border);
+    border-radius: 10px;
+    box-shadow: 0 4px 18px rgba(17, 24, 39, .06);
+}
+input, select, textarea { min-height: 42px; }
+textarea { min-height: 100px; }
+
+/* Don't let long data or actions force a narrow screen to overflow. */
+.table-responsive, .table-wrapper, .responsive-table { max-width: 100%; overflow-x: auto; }
+img, svg { max-width: 100%; }
+
+@media (max-width: 760px) {
+    .dashboard-main { width: 100%; }
+    .dashboard-topbar { gap: 12px; }
+    .admin-panel, .student-content-panel, .department-chart-panel, .attendance-monitor-panel { border-radius: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}
+
+
+
+/* Consistent WIS interactions across administrator, department-head, and student pages.
+   The original maroon-and-gold sidebar highlight is intentionally preserved. */
+:root {
+    --ui-hover-surface: #fffaf0;
+    --ui-brand-border: rgba(139, 30, 30, .22);
+    --ui-card-hover-shadow: 0 7px 18px rgba(60, 24, 24, .09);
+}
+
+/* Sidebar: restore the familiar dashboard hover/active treatment on every role. */
+.admin-dashboard-page .student-sidebar,
+.department-head-dashboard-page .student-sidebar,
+.student-dashboard-page .student-sidebar {
+    background: var(--wis-maroon-dark, #641414);
+    box-shadow: 3px 0 14px rgba(55, 18, 18, .08);
+}
+
+.admin-dashboard-page .student-navigation,
+.department-head-dashboard-page .student-navigation,
+.student-dashboard-page .student-navigation { gap: 6px; }
+
+.admin-dashboard-page .student-navigation a,
+.department-head-dashboard-page .student-navigation a,
+.student-dashboard-page .student-navigation a,
+.admin-dashboard-page .logout-link,
+.department-head-dashboard-page .logout-link,
+.student-dashboard-page .logout-link {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, .92);
+    transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.admin-dashboard-page .student-navigation a:hover,
+.department-head-dashboard-page .student-navigation a:hover,
+.student-dashboard-page .student-navigation a:hover,
+.admin-dashboard-page .student-navigation a.active,
+.department-head-dashboard-page .student-navigation a.active,
+.student-dashboard-page .student-navigation a.active {
+    background: var(--wis-maroon, #8B1E1E);
+    color: var(--wis-gold, #F2C300);
+}
+
+.admin-dashboard-page .student-navigation a.active,
+.department-head-dashboard-page .student-navigation a.active,
+.student-dashboard-page .student-navigation a.active {
+    border-color: rgba(242, 195, 0, .25);
+    font-weight: 700;
+}
+
+.admin-dashboard-page .student-navigation a:hover i,
+.department-head-dashboard-page .student-navigation a:hover i,
+.student-dashboard-page .student-navigation a:hover i,
+.admin-dashboard-page .student-navigation a.active i,
+.department-head-dashboard-page .student-navigation a.active i,
+.student-dashboard-page .student-navigation a.active i { color: var(--wis-gold, #F2C300); }
+
+.admin-dashboard-page .logout-link:hover,
+.department-head-dashboard-page .logout-link:hover,
+.student-dashboard-page .logout-link:hover {
+    background: #fff;
+    color: var(--wis-maroon, #8B1E1E);
+}
+
+/* Polished card interactions across all roles: soft shadow and small lift, never neon. */
+.admin-dashboard-page .admin-summary-card,
+.admin-dashboard-page .admin-panel,
+.admin-dashboard-page .stat-card,
+.department-head-dashboard-page .department-stat-card,
+.department-head-dashboard-page .department-action-card,
+.department-head-dashboard-page .stat-card,
+.department-head-dashboard-page .department-chart-panel,
+.department-head-dashboard-page .attendance-monitor-panel,
+.student-dashboard-page .student-stat-card,
+.student-dashboard-page .student-content-panel,
+.student-dashboard-page .student-attendance-card,
+.admin-dashboard-page .management-card,
+.department-head-dashboard-page .management-card,
+.student-dashboard-page .management-card {
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.admin-dashboard-page .admin-summary-card:hover,
+.admin-dashboard-page .admin-panel:hover,
+.admin-dashboard-page .stat-card:hover,
+.department-head-dashboard-page .department-stat-card:hover,
+.department-head-dashboard-page .department-action-card:hover,
+.department-head-dashboard-page .stat-card:hover,
+.department-head-dashboard-page .department-chart-panel:hover,
+.department-head-dashboard-page .attendance-monitor-panel:hover,
+.student-dashboard-page .student-stat-card:hover,
+.student-dashboard-page .student-content-panel:hover,
+.student-dashboard-page .student-attendance-card:hover,
+.admin-dashboard-page .management-card:hover,
+.department-head-dashboard-page .management-card:hover,
+.student-dashboard-page .management-card:hover {
+    border-color: var(--ui-brand-border);
+    box-shadow: var(--ui-card-hover-shadow);
+    transform: translateY(-2px);
+}
+
+.admin-dashboard-page .btn:hover,
+.department-head-dashboard-page .btn:hover,
+.student-dashboard-page .btn:hover,
+.admin-dashboard-page button:hover,
+.department-head-dashboard-page button:hover,
+.student-dashboard-page button:hover,
+.admin-dashboard-page .management-button:hover,
+.department-head-dashboard-page .management-button:hover,
+.student-dashboard-page .management-button:hover {
+    filter: brightness(.96);
+    box-shadow: 0 2px 5px rgba(60, 24, 24, .10);
+}
+
+.admin-dashboard-page .admin-table tbody tr:hover,
+.department-head-dashboard-page .management-table tbody tr:hover,
+.department-head-dashboard-page .admin-table tbody tr:hover,
+.student-dashboard-page .student-table tbody tr:hover { background-color: #fffaf0; }
+
+/* Visible keyboard focus, without decorative glow. */
+.admin-dashboard-page :where(a, button, input, select, textarea, [tabindex]):focus-visible,
+.department-head-dashboard-page :where(a, button, input, select, textarea, [tabindex]):focus-visible,
+.student-dashboard-page :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+    }
+}

@@ -26,14 +26,12 @@ $stmt = $pdo->prepare(
         ON e.event_id = ea.event_id
      WHERE aa.student_id = ?
        AND ea.student_id = ?
-       AND e.department_id = ?
      ORDER BY aa.submitted_at DESC, aa.appeal_id DESC'
 );
 
 $stmt->execute([
     $studentId,
-    $studentId,
-    $studentDepartmentId
+    $studentId
 ]);
 
 $appeals = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -13,11 +13,9 @@ $stmt = $pdo->prepare(
      FROM attendance_appeals aa
      INNER JOIN event_attendance ea ON ea.attendance_id = aa.attendance_id
      INNER JOIN events e ON e.event_id = ea.event_id
-     INNER JOIN students s ON s.student_id = aa.student_id
-     WHERE aa.appeal_id = ? AND e.department_id = ?
-       AND s.department_id = ?'
+     WHERE aa.appeal_id = ? AND e.department_id = ?'
 );
-$stmt->execute([$appealId, $departmentId, $departmentId]);
+$stmt->execute([$appealId, $departmentId]);
 $storedPath = $stmt->fetchColumn();
 if (!is_string($storedPath) || $storedPath === '') {
     http_response_code(404);

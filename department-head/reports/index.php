@@ -139,14 +139,39 @@ $studentsStmt = $pdo->prepare("
 
 $studentsStmt->execute([$departmentId]);
 $students = $studentsStmt->fetchAll(PDO::FETCH_ASSOC);
+$currentStudents = $students;
+$studentsById = [];
+foreach ($currentStudents as $student) {
+    $studentsById[(int) $student['student_id']] = $student;
+}
 
 $eventIds = array_map('intval', array_column($events, 'event_id'));
 
 $participantRules = [];
+$rosterStudentsByEvent = [];
 $attendanceByEventStudent = [];
 
 if ($eventIds !== []) {
     $placeholders = implode(',', array_fill(0, count($eventIds), '?'));
+
+    $rosterStmt = $pdo->prepare("
+        SELECT event_id, student_id, student_number, first_name,
+               middle_name, last_name, year_level, section
+        FROM event_attendance_roster
+        WHERE department_id = ? AND event_id IN ($placeholders)
+    ");
+    $rosterStmt->execute(array_merge([$departmentId], $eventIds));
+
+    foreach ($rosterStmt->fetchAll(PDO::FETCH_ASSOC) as $rosterStudent) {
+        $eventKey = (int) $rosterStudent['event_id'];
+        $studentKey = (int) $rosterStudent['student_id'];
+        $rosterStudentsByEvent[$eventKey][$studentKey] = $rosterStudent;
+        if (!isset($studentsById[$studentKey])) {
+            $studentsById[$studentKey] = $rosterStudent;
+        }
+    }
+
+    $students = array_values($studentsById);
 
     $rulesStmt = $pdo->prepare("
         SELECT
@@ -174,10 +199,10 @@ if ($eventIds !== []) {
         FROM event_attendance ea
         INNER JOIN events e
             ON e.event_id = ea.event_id
-        INNER JOIN students s
-            ON s.student_id = ea.student_id
+        INNER JOIN event_attendance_roster r
+            ON r.event_id = ea.event_id AND r.student_id = ea.student_id
         WHERE e.department_id = ?
-          AND s.department_id = ?
+          AND r.department_id = ?
           AND ea.event_id IN ($placeholders)
     ");
 
@@ -266,20 +291,20 @@ foreach ($events as $event) {
     $rules = $participantRules[$eventId] ?? [];
     $eligibleStudentIds = [];
 
-    foreach ($students as $student) {
-        /*
-         * Upcoming/pending events use the active roster.
-         * Finalized historical events retain relevant inactive student records.
-         */
-        if (
-            !$isFinalized
-            && ($student['enrollment_status'] ?? '') !== 'enrolled'
-        ) {
-            continue;
-        }
+    if ($isFinalized) {
+        $eligibleStudentIds = array_map(
+            'intval',
+            array_keys($rosterStudentsByEvent[$eventId] ?? [])
+        );
+    } else {
+        foreach ($currentStudents as $student) {
+            if (($student['enrollment_status'] ?? 'enrolled') !== 'enrolled') {
+                continue;
+            }
 
-        if (dhReportStudentIsEligible($student, $rules)) {
-            $eligibleStudentIds[] = (int) $student['student_id'];
+            if (dhReportStudentIsEligible($student, $rules)) {
+                $eligibleStudentIds[] = (int) $student['student_id'];
+            }
         }
     }
 

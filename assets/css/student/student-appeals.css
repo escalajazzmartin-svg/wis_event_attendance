@@ -467,3 +467,175 @@
         display: none;
     }
 }
+/* Appeal link/button (shared by attendance + appeal pages) */
+.student-module-page a.student-appeal-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 11px;
+    border: 1px solid var(--wis-maroon);
+    border-radius: 7px;
+    background: var(--wis-white);
+    color: var(--wis-maroon);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.student-module-page a.student-appeal-link:hover {
+    background: var(--wis-maroon);
+    color: var(--wis-white);
+}
+
+.student-module-page a.student-appeal-link:focus-visible {
+    outline: 2px solid var(--wis-gold-dark);
+    outline-offset: 2px;
+}
+
+/* Appeal form + detail pages */
+.student-module-page .student-appeal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 720px;
+}
+
+.student-module-page .student-appeal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.student-module-page .student-appeal-field label {
+    font-weight: 500;
+}
+
+.student-module-page .student-appeal-field textarea,
+.student-module-page .student-appeal-field input[type="file"] {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid var(--wis-border);
+    border-radius: 8px;
+    background: var(--wis-white);
+    color: var(--wis-black);
+    font: inherit;
+    box-sizing: border-box;
+}
+
+.student-module-page .student-appeal-field textarea {
+    min-height: 140px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.student-module-page .student-appeal-field textarea:focus,
+.student-module-page .student-appeal-field input[type="file"]:focus {
+    outline: 2px solid var(--wis-gold-dark);
+    outline-offset: 1px;
+    border-color: var(--wis-maroon);
+}
+
+.student-module-page .student-appeal-field small {
+    color: #6b6262;
+}
+
+.student-module-page .student-appeal-current {
+    margin: 0;
+}
+
+.student-module-page .student-appeal-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 400;
+}
+
+.student-module-page .student-appeal-errors {
+    border-color: #e3b3b3;
+    background: #fdf0f0;
+    color: #8b1e1e;
+}
+
+.student-module-page .student-appeal-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.student-module-page .student-appeal-form-actions form {
+    margin: 0;
+}
+
+.student-module-page .student-appeal-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border: 1px solid var(--wis-maroon);
+    border-radius: 8px;
+    background: var(--wis-maroon);
+    color: var(--wis-white);
+    font: inherit;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.student-module-page .student-appeal-button:hover {
+    background: var(--wis-maroon-dark);
+    border-color: var(--wis-maroon-dark);
+}
+
+.student-module-page .student-appeal-button-secondary {
+    background: var(--wis-white);
+    color: var(--wis-maroon);
+}
+
+.student-module-page .student-appeal-button-secondary:hover {
+    background: var(--wis-background);
+    color: var(--wis-maroon-dark);
+}
+
+.student-module-page .student-appeal-detail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 24px;
+    margin: 0 0 18px;
+}
+
+.student-module-page .student-appeal-detail dt {
+    margin-bottom: 4px;
+    color: #6b6262;
+    font-size: 13px;
+}
+
+.student-module-page .student-appeal-detail dd {
+    margin: 0;
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+}
+
+.student-module-page .student-appeal-detail-full {
+    grid-column: 1 / -1;
+}
+
+.student-module-page .status-pill.status-withdrawn {
+    border-color: #d5d5d5;
+    background: #f1f1f1;
+    color: #555;
+}
+
+@media (max-width: 600px) {
+    .student-module-page .student-appeal-detail {
+        grid-template-columns: 1fr;
+    }
+
+    .student-module-page .student-appeal-form-actions > * {
+        width: 100%;
+    }
+}

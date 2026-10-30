@@ -1,11 +1,10 @@
 <?php
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/event_lifecycle.php';
 
 $role = strtolower(trim(
     $_SESSION['role_name'] ?? $_SESSION['role'] ?? ''
@@ -25,21 +24,27 @@ $stmt = $pdo->prepare(
             d.department_head_can_edit_attendance
      FROM department_heads dh
      INNER JOIN departments d ON d.department_id = dh.department_id
+     INNER JOIN users u ON u.user_id = dh.user_id
      WHERE dh.user_id = ?
+       AND u.account_status = 'active'
+       AND d.is_active = 1
      LIMIT 1"
 );
 $stmt->execute([$_SESSION['user_id']]);
 $departmentHead = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$departmentHead) {
-    error_log('Department Head profile was not found for the signed-in user.');
-    http_response_code(403);
-    exit('Your account is not assigned to a department.');
+    $_SESSION = [];
+    session_destroy();
+    header('Location: ' . BASE_URL . '/auth/department-head-login.php?notice=account_unavailable');
+    exit;
 }
 
 $departmentId = (int) $departmentHead['department_id'];
 $departmentHeadId = (int) $departmentHead['department_head_id'];
 $baseUrl = BASE_URL;
+
+synchronizeEventLifecycle($pdo);
 
 function dhEscape(mixed $value): string
 {
@@ -141,6 +146,8 @@ function dhValidateEventSubmission(PDO $pdo, array $input): array
         $errors[] = 'Enter valid event start and end times.';
     } elseif ($values['end_at'] <= $values['start_at']) {
         $errors[] = 'The event end time must be after its start time.';
+    } elseif ($values['start_at'] <= $pdo->query('SELECT NOW()')->fetchColumn()) {
+        $errors[] = 'The event start time must be in the future.';
     } elseif (
         $period &&
         (

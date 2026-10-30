@@ -2,6 +2,7 @@
 Options -Indexes
 DirectoryIndex index.php
 ServerSignature Off
+SetEnv WEAMMS_ENV development
 
 # Do not expose private application folders through the browser.
 <IfModule mod_rewrite.c>

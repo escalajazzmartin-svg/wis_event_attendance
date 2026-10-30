@@ -1,11 +1,8 @@
 <?php
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/../../config/session.php';
 
-require_once __DIR__ . '/../../config/app.php';
-require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/admin_context.php';
 
 if (
     empty($_SESSION['user_id']) ||
@@ -66,5 +63,16 @@ if ($stmt->rowCount() === 0) {
     }
 }
 
-header('Location: ' . BASE_URL . '/admin/departments/index.php?notice=permission_updated');
+adminLogActivity(
+    $pdo,
+    ((int) $enabledValue === 1 ? 'granted' : 'revoked') . ' department-head permission',
+    'department',
+    (int) $departmentId,
+    $permission
+);
+
+$returnTo = ($_POST['return'] ?? '') === 'user_edit' && filter_var($_POST['user_id'] ?? null, FILTER_VALIDATE_INT)
+    ? '/admin/students/edit.php?id=' . (int) $_POST['user_id'] . '&notice=permission_updated'
+    : '/admin/department-heads/index.php?notice=permission_updated';
+header('Location: ' . BASE_URL . $returnTo);
 exit;

@@ -1,20 +1,38 @@
 <?php
-session_start();
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/login_rate_limit.php';
 
 $error = '';
 $username = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = trim($_POST['username'] ?? '');
-    $password = $_POST['password'] ?? '';
+if (empty($_SESSION['student_login_csrf'])) {
+    $_SESSION['student_login_csrf'] = bin2hex(random_bytes(32));
+}
 
-    if ($username === '' || $password === '') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = trim(
+        is_string($_POST['username'] ?? null) ? $_POST['username'] : ''
+    );
+    $password = is_string($_POST['password'] ?? null)
+        ? $_POST['password']
+        : '';
+    $csrfToken = $_POST['csrf_token'] ?? '';
+
+    if (!is_string($csrfToken) || !hash_equals($_SESSION['student_login_csrf'], $csrfToken)) {
+        $error = 'Invalid request. Please refresh and try again.';
+    } elseif (
+        $username === '' || strlen($username) > 100 ||
+        $password === '' || strlen($password) > 4096
+    ) {
         $error = 'Please enter your username and password.';
     } else {
         try {
-            $sql = "
+            if (loginRateLimitIsBlocked($pdo, $username)) {
+                $error = 'Too many login attempts. Please wait 15 minutes and try again.';
+            } else {
+                $sql = "
                 SELECT
                     u.user_id,
                     u.username,
@@ -29,37 +47,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 LIMIT 1
             ";
 
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute([$username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                $stmt = $pdo->prepare($sql);
+                $stmt->execute([$username]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (
-                !$user ||
-                !password_verify($password, $user['password_hash'])
-            ) {
-                $error = 'Invalid student username or password.';
-            } elseif (
-                strtolower($user['account_status']) !== 'active'
-            ) {
-                $error = 'Your account is inactive. Please contact the administrator.';
-            } else {
-                session_regenerate_id(true);
+                if (
+                    !$user ||
+                    !password_verify($password, $user['password_hash'])
+                ) {
+                    loginRateLimitRecordFailure($pdo, $username);
+                    $error = 'Invalid student username or password.';
+                } elseif (
+                    strtolower($user['account_status']) !== 'active'
+                ) {
+                    loginRateLimitRecordFailure($pdo, $username);
+                    $error = 'Your account is inactive. Please contact the administrator.';
+                } else {
+                    loginRateLimitClear($pdo, $username);
+                    session_regenerate_id(true);
 
-                $_SESSION['user_id'] = (int) $user['user_id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['email'] = $user['email'];
-                $_SESSION['role'] = strtolower(trim($user['role_name']));
-                $_SESSION['role_name'] = strtolower(trim($user['role_name']));
+                    $_SESSION['user_id'] = (int) $user['user_id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['role'] = strtolower(trim($user['role_name']));
+                    $_SESSION['role_name'] = strtolower(trim($user['role_name']));
+                    unset($_SESSION['student_login_csrf']);
 
-                $update = $pdo->prepare("
+                    $update = $pdo->prepare("
                     UPDATE users
                     SET last_login_at = NOW()
                     WHERE user_id = ?
                 ");
-                $update->execute([$user['user_id']]);
+                    $update->execute([$user['user_id']]);
 
-                header('Location: ../student/dashboard.php');
-                exit;
+                    header('Location: ../student/dashboard.php');
+                    exit;
+                }
             }
         } catch (PDOException $e) {
             error_log('Student login failed: ' . $e->getMessage());
@@ -78,6 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <title>Student Login | WEAMMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&amp;family=Roboto:wght@400;500;700&amp;display=swap">
     <link rel="icon" type="image/png" href="../assets/images/wisnoname.png">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/student/student.css">
@@ -116,6 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="POST" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['student_login_csrf'], ENT_QUOTES, 'UTF-8') ?>">
             <div class="select-field">
                 <label for="username">Username</label>
                 <input

@@ -1,9 +1,7 @@
 
 <?php
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/app.php';
 
@@ -29,6 +27,10 @@ if (ini_get('session.use_cookies')) {
 // Destroy the session.
 session_destroy();
 
-$loginPage = $role === 'admin' ? '/auth/admin-login.php' : '/auth/student-login.php';
+$loginPage = match ($role) {
+    'admin' => '/auth/admin-login.php',
+    'department_head' => '/auth/department-head-login.php',
+    default => '/auth/student-login.php',
+};
 header('Location: ' . BASE_URL . $loginPage);
 exit;

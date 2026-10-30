@@ -1,8 +1,11 @@
 <?php
-session_start();
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/app.php';
+require_once __DIR__ . '/../includes/event_lifecycle.php';
+
+synchronizeEventLifecycle($pdo);
 
 $role = strtolower(trim(
     $_SESSION['role_name'] ?? $_SESSION['role'] ?? ''
@@ -212,6 +215,10 @@ function eventTime(?string $date): string
     <link rel="icon" type="image/png"
         href="<?= $baseUrl ?>/assets/images/wisnoname.png">
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&amp;family=Roboto:wght@400;500;700&amp;display=swap">
+
     <link rel="stylesheet"
         href="<?= $baseUrl ?>/assets/css/style.css">
 
@@ -222,19 +229,20 @@ function eventTime(?string $date): string
         href="<?= $baseUrl ?>/assets/css/department-head.css">
 
     <link rel="stylesheet"
+        href="<?= $baseUrl ?>/assets/css/department-head-sidebar.css">
+
+    <link rel="stylesheet"
+        href="<?= $baseUrl ?>/assets/css/ui-refresh.css">
+
+    <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 
 <body class="department-head-dashboard-page">
 
-    <?php require_once __DIR__ . '/../includes/sidebar.php'; ?>
+    <?php require_once __DIR__ . '/../includes/department_head_sidebar.php'; ?>
 
     <main class="dashboard-main">
-
-        <?php
-        $userRole = 'Department Head';
-        require_once __DIR__ . '/../includes/header.php';
-        ?>
 
         <?php if ($databaseWarning): ?>
             <div class="dashboard-alert">

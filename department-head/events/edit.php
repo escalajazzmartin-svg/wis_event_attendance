@@ -31,8 +31,14 @@ $pendingChangeStmt = $pdo->prepare(
 $pendingChangeStmt->execute([$eventId]);
 $hasPendingChange = (int) $pendingChangeStmt->fetchColumn() > 0;
 $isApprovedEvent = $event['event_status'] === 'approved';
+$databaseNow = $pdo->query('SELECT NOW()')->fetchColumn();
+$hasAttendanceStmt = $pdo->prepare(
+    'SELECT 1 FROM event_attendance WHERE event_id = ? LIMIT 1'
+);
+$hasAttendanceStmt->execute([$eventId]);
+$hasAttendance = $hasAttendanceStmt->fetchColumn() !== false;
 $canEdit = in_array(strtolower($event['event_status']), ['pending', 'rejected'], true)
-    || ($isApprovedEvent && !$hasPendingChange);
+    || ($isApprovedEvent && !$hasPendingChange && !$hasAttendance && $event['start_at'] > $databaseNow);
 $periodStmt = $pdo->query(
     'SELECT academic_period_id, academic_year, semester,
             start_date, end_date, is_current
@@ -236,7 +242,11 @@ function dhEditEventInputValue(?string $value): string
 
     <?php if (!$canEdit): ?>
         <div class="management-alert" role="alert">
-            <?= $hasPendingChange ? 'A schedule change request is already awaiting administrator review.' : 'This event is ' . dhEscape($event['event_status']) . ' and cannot be edited.' ?>
+            <?= $hasPendingChange
+                ? 'A schedule change request is already awaiting administrator review.'
+                : ($hasAttendance || ($isApprovedEvent && $event['start_at'] <= $databaseNow)
+                    ? 'Events cannot be changed once attendance has started or the event has begun.'
+                    : 'This event is ' . dhEscape($event['event_status']) . ' and cannot be edited.') ?>
         </div>
     <?php endif; ?>
 

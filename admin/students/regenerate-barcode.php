@@ -22,5 +22,5 @@ if ($stmt->rowCount() === 0) {
     http_response_code(404);
     exit('Student account not found.');
 }
-adminLogActivity($pdo, 'regenerated barcode for', 'student', $userId);
-adminRedirect('/admin/students/index.php', ['notice' => 'barcode_regenerated']);
+adminLogActivity($pdo, 'regenerated QR code for', 'student', $userId);
+adminRedirect(adminReturnPath('/admin/students/index.php'), ['notice' => 'barcode_regenerated']);

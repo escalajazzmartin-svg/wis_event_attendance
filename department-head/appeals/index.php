@@ -12,11 +12,12 @@ if (!is_string($statusFilter) || !in_array($statusFilter, $statuses, true)) {
 $stmt = $pdo->prepare(
     'SELECT aa.appeal_id, aa.appeal_reason, aa.appeal_status,
             aa.submitted_at, e.event_title, e.start_at,
-            s.student_number, s.first_name, s.middle_name, s.last_name
+            r.student_number, r.first_name, r.middle_name, r.last_name
      FROM attendance_appeals aa
      INNER JOIN event_attendance ea ON ea.attendance_id = aa.attendance_id
      INNER JOIN events e ON e.event_id = ea.event_id
-     INNER JOIN students s ON s.student_id = aa.student_id
+     INNER JOIN event_attendance_roster r
+        ON r.event_id = ea.event_id AND r.student_id = aa.student_id
      WHERE e.department_id = ? AND aa.appeal_status = ?
      ORDER BY aa.submitted_at DESC'
 );

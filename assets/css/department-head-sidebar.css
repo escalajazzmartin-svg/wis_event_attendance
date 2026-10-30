@@ -1,0 +1,204 @@
+/* Admin-style sidebar for department head pages that keep the older layout. */
+.admin-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 1001;
+    display: flex;
+    flex-direction: column;
+    width: 249px;
+    height: 100vh;
+    padding: 22px 14px 41px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: #651515;
+    color: #fff;
+    font-family: 'Roboto', Arial, sans-serif;
+}
+
+.admin-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 10px 19px;
+    border-bottom: 1px solid rgb(255 255 255 / 20%);
+}
+
+.admin-brand img {
+    flex: 0 0 56px;
+    width: 56px;
+    height: 56px;
+    padding: 4px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    background: #fff;
+    object-fit: contain;
+}
+
+.admin-brand strong {
+    display: block;
+    color: #f2c41d;
+    font-family: 'Cinzel', Georgia, 'Times New Roman', serif;
+    font-size: 23px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.admin-brand span {
+    display: block;
+    margin-top: 2px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+.admin-nav {
+    display: grid;
+    gap: 4px;
+    margin-top: 21px;
+}
+
+.admin-nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 38px;
+    padding: 0 14px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Roboto', Arial, sans-serif;
+    font-size: 14.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.15s ease;
+}
+
+.admin-nav a:hover {
+    background: rgb(255 255 255 / 10%);
+}
+
+.admin-nav a.active {
+    background: rgb(255 255 255 / 18%);
+    font-weight: 700;
+}
+
+.admin-icon {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+}
+
+.admin-nav a.active .admin-icon {
+    color: #f2c41d;
+}
+
+.admin-sidebar-footer {
+    margin-top: auto;
+    padding: 16px 14px 0;
+    border-top: 1px solid rgb(255 255 255 / 20%);
+}
+
+.admin-sidebar-user strong,
+.admin-sidebar-user span {
+    display: block;
+    line-height: 1.25;
+}
+
+.admin-sidebar-user strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.admin-sidebar-user span {
+    font-size: 12px;
+}
+
+.admin-logout {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    margin-top: 16px;
+    padding: 13px 14px;
+    box-sizing: border-box;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 400;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.admin-logout:hover {
+    background: #fff;
+    color: #8b1e1e;
+}
+
+/* The older layout reserved 255px for its sidebar; this one is 249px. */
+.department-head-dashboard-page .dashboard-main {
+    width: calc(100% - 249px);
+    max-width: calc(100% - 249px);
+    margin-left: 249px;
+}
+
+@media (max-width: 760px) {
+    .admin-sidebar {
+        width: 72px;
+        padding: 18px 8px;
+    }
+
+    .admin-brand {
+        justify-content: center;
+        padding: 0 0 16px;
+    }
+
+    .admin-brand img {
+        flex-basis: 44px;
+        width: 44px;
+        height: 44px;
+    }
+
+    .admin-brand > div,
+    .admin-nav a span,
+    .admin-sidebar-user {
+        display: none;
+    }
+
+    .admin-nav a {
+        justify-content: center;
+        padding: 0;
+    }
+
+    .admin-sidebar-footer {
+        padding: 14px 0 0;
+        text-align: center;
+    }
+
+    .admin-logout {
+        justify-content: center;
+        margin-top: 0;
+        padding: 10px 0;
+    }
+
+    .admin-logout span {
+        display: none;
+    }
+
+    .department-head-dashboard-page .dashboard-main {
+        width: calc(100% - 72px);
+        max-width: calc(100% - 72px);
+        margin-left: 72px;
+    }
+}
+
+/* Only the current page is bold; every other menu item is regular weight. */
+.admin-sidebar .admin-nav a,
+.admin-sidebar .admin-nav a span {
+    font-weight: 400;
+}
+
+.admin-sidebar .admin-nav a.active,
+.admin-sidebar .admin-nav a.active span,
+.admin-sidebar .admin-nav a[aria-current="page"],
+.admin-sidebar .admin-nav a[aria-current="page"] span {
+    font-weight: 700;
+}

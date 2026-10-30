@@ -74,10 +74,10 @@ $attendanceStmt = $pdo->prepare(
             COALESCE(SUM(ea.attendance_status = 'excused'), 0) AS excused
      FROM event_attendance ea
      INNER JOIN events e ON e.event_id = ea.event_id
-     WHERE ea.student_id = ? AND e.department_id = ?"
+     WHERE ea.student_id = ?"
 );
 
-$attendanceStmt->execute([$studentId, $studentDepartmentId]);
+$attendanceStmt->execute([$studentId]);
 $attendance = $attendanceStmt->fetch(PDO::FETCH_ASSOC);
 
 // Load per-event attendance totals for the student attendance chart.
@@ -95,12 +95,11 @@ $attendanceChartStmt = $pdo->prepare(
      INNER JOIN events e ON e.event_id = ea.event_id
      INNER JOIN academic_periods ap ON ap.academic_period_id = e.academic_period_id
      WHERE ea.student_id = ?
-       AND e.department_id = ?
      GROUP BY e.event_id, e.academic_period_id, ap.academic_year, ap.semester
      ORDER BY e.start_at ASC, e.event_id ASC"
 );
 
-$attendanceChartStmt->execute([$studentId, $studentDepartmentId]);
+$attendanceChartStmt->execute([$studentId]);
 $attendanceChartEvents = $attendanceChartStmt->fetchAll(PDO::FETCH_ASSOC);
 
 $attendanceTotal = (int) $attendance['total'];
@@ -148,10 +147,10 @@ $appealStmt = $pdo->prepare(
      FROM attendance_appeals aa
      INNER JOIN event_attendance ea ON ea.attendance_id = aa.attendance_id
      INNER JOIN events e ON e.event_id = ea.event_id
-     WHERE aa.student_id = ? AND e.department_id = ?"
+     WHERE aa.student_id = ?"
 );
 
-$appealStmt->execute([$studentId, $studentDepartmentId]);
+$appealStmt->execute([$studentId]);
 $appealStats = $appealStmt->fetch(PDO::FETCH_ASSOC);
 
 $studentName = studentName($studentProfile);

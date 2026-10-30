@@ -1,61 +1,54 @@
 <?php
 
-$adminPageTitle = 'Event Management';
+$adminPageTitle = 'Events';
 require_once __DIR__ . '/../../includes/admin_layout_start.php';
+require_once __DIR__ . '/../../includes/admin_lists.php';
 
-$statuses = ['pending', 'approved', 'rejected', 'cancellation_requested', 'cancelled', 'completed'];
-$statusFilter = $_GET['status'] ?? '';
-if (!is_string($statusFilter) || ($statusFilter !== '' && !in_array($statusFilter, $statuses, true))) {
-    $statusFilter = '';
-}
-$query = trim(is_string($_GET['q'] ?? null) ? $_GET['q'] : '');
-$departmentId = filter_var($_GET['department_id'] ?? null, FILTER_VALIDATE_INT);
-$departmentId = $departmentId !== false && $departmentId > 0 ? $departmentId : 0;
-$periodId = filter_var($_GET['academic_period_id'] ?? null, FILTER_VALIDATE_INT);
-$periodId = $periodId !== false && $periodId > 0 ? $periodId : 0;
-$dateFrom = is_string($_GET['date_from'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date_from']) ? $_GET['date_from'] : '';
-$dateTo = is_string($_GET['date_to'] ?? null) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date_to']) ? $_GET['date_to'] : '';
+const EVENTS_PER_PAGE = 10;
+
+$statusTabs = [
+    'pending' => ['Pending', 'ad-pill-yellow'],
+    'approved' => ['Approved', 'ad-pill-green'],
+    'completed' => ['Completed', 'ad-pill-blue'],
+    'rejected' => ['Rejected', 'ad-pill-red'],
+    'cancellation_requested' => ['Cancellation requested', 'ad-pill-yellow'],
+    'cancelled' => ['Cancelled', 'ad-pill-gray'],
+];
+$statusFilter = is_string($_GET['status'] ?? null) && isset($statusTabs[$_GET['status']]) ? $_GET['status'] : '';
+
+[$where, $params, $filters] = adminEventFilter($pdo, $_GET);
+[$page, $offset] = adminPage(EVENTS_PER_PAGE);
+
 $departments = $pdo->query('SELECT department_id, department_name FROM departments ORDER BY department_name')->fetchAll(PDO::FETCH_ASSOC);
 $periods = $pdo->query('SELECT academic_period_id, academic_year, semester FROM academic_periods ORDER BY start_date DESC')->fetchAll(PDO::FETCH_ASSOC);
 
-$sql = 'SELECT e.event_id, e.event_title, e.start_at, e.end_at,
-               e.event_status, d.department_name, ap.academic_year, ap.semester,
-               dh.first_name, dh.middle_name, dh.last_name
-        FROM events e
-        INNER JOIN departments d ON d.department_id = e.department_id
-        INNER JOIN academic_periods ap ON ap.academic_period_id = e.academic_period_id
-        LEFT JOIN department_heads dh ON dh.department_head_id = e.requested_by
-        WHERE 1 = 1';
-$params = [];
+// Tab counts reflect the search, department and period that are selected.
+$countStmt = $pdo->prepare('SELECT e.event_status, COUNT(*) ' . ADMIN_EVENT_FROM . ' WHERE ' . $where . ' GROUP BY e.event_status');
+$countStmt->execute($params);
+$statusCounts = $countStmt->fetchAll(PDO::FETCH_KEY_PAIR);
+$allCount = array_sum(array_map('intval', $statusCounts));
+
+$listWhere = $where;
+$listParams = $params;
 if ($statusFilter !== '') {
-    $sql .= ' AND e.event_status = :status';
-    $params['status'] = $statusFilter;
+    $listWhere .= ' AND e.event_status = :status';
+    $listParams['status'] = $statusFilter;
 }
-if ($query !== '') {
-    $sql .= ' AND (e.event_title LIKE :title OR e.venue LIKE :venue)';
-    $params['title'] = '%' . $query . '%';
-    $params['venue'] = '%' . $query . '%';
-}
-if ($departmentId > 0) {
-    $sql .= ' AND e.department_id = :department_id';
-    $params['department_id'] = $departmentId;
-}
-if ($periodId > 0) {
-    $sql .= ' AND e.academic_period_id = :period_id';
-    $params['period_id'] = $periodId;
-}
-if ($dateFrom !== '') {
-    $sql .= ' AND DATE(e.start_at) >= :date_from';
-    $params['date_from'] = $dateFrom;
-}
-if ($dateTo !== '') {
-    $sql .= ' AND DATE(e.start_at) <= :date_to';
-    $params['date_to'] = $dateTo;
-}
-$sql .= ' ORDER BY e.created_at DESC, e.event_id DESC';
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
+$total = $statusFilter === '' ? $allCount : (int) ($statusCounts[$statusFilter] ?? 0);
+[$page, $offset] = adminClampPage($page, EVENTS_PER_PAGE, $total);
+
+$stmt = $pdo->prepare(
+    'SELECT e.event_id, e.event_title, e.start_at, e.event_status, d.department_name,
+            dh.first_name, dh.middle_name, dh.last_name '
+    . ADMIN_EVENT_FROM . ' WHERE ' . $listWhere . '
+     ORDER BY FIELD(e.event_status, \'pending\', \'cancellation_requested\', \'approved\', \'completed\', \'rejected\', \'cancelled\'),
+              IF(e.event_status IN (\'pending\', \'cancellation_requested\'), UNIX_TIMESTAMP(e.start_at), -UNIX_TIMESTAMP(e.start_at)),
+              e.event_id DESC
+     LIMIT ' . EVENTS_PER_PAGE . ' OFFSET ' . $offset
+);
+$stmt->execute($listParams);
 $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 $changeRequests = $pdo->query(
     "SELECT cr.change_request_id, cr.event_id, cr.requested_at,
             e.event_title, e.start_at, d.department_name,
@@ -68,22 +61,7 @@ $changeRequests = $pdo->query(
      ORDER BY cr.requested_at ASC
      LIMIT 10"
 )->fetchAll(PDO::FETCH_ASSOC);
-$phaseFilter = $_GET['phase'] ?? '';
-if (!is_string($phaseFilter) || !in_array($phaseFilter, ['', 'upcoming', 'ongoing', 'completed'], true)) {
-    $phaseFilter = '';
-}
-if ($phaseFilter !== '') {
-    $now = time();
-    $events = array_values(array_filter($events, static function (array $event) use ($phaseFilter, $now): bool {
-        $start = strtotime($event['start_at']);
-        $end = strtotime($event['end_at']);
-        return match ($phaseFilter) {
-            'upcoming' => $event['event_status'] === 'approved' && $start > $now,
-            'ongoing' => $event['event_status'] === 'approved' && $start <= $now && $end >= $now,
-            'completed' => $event['event_status'] === 'completed' || ($event['event_status'] === 'approved' && $end < $now),
-        };
-    }));
-}
+
 $notice = match ($_GET['notice'] ?? '') {
     'approved' => 'Event request approved.',
     'rejected' => 'Event request rejected.',
@@ -94,65 +72,169 @@ $notice = match ($_GET['notice'] ?? '') {
     'change_rejected' => 'Event schedule changes rejected.',
     default => '',
 };
+
+// Query string shared by tabs, filters and export so they stay in step.
+$sharedQuery = array_filter([
+    'q' => $filters['q'],
+    'department_id' => $filters['department_id'] ?: '',
+    'academic_period_id' => $filters['period_all'] ? 'all' : $filters['period_id'],
+    'event_date' => $filters['event_date'],
+], static fn ($v): bool => $v !== '' && $v !== 0);
+$tabHref = static fn (string $status): string => '?' . http_build_query($status === '' ? $sharedQuery : $sharedQuery + ['status' => $status]);
+$exportQuery = http_build_query($statusFilter === '' ? $sharedQuery : $sharedQuery + ['status' => $statusFilter]);
 ?>
 
-<section class="admin-content-section">
-    <div class="admin-page-heading">
-        <div><span class="admin-eyebrow">Events</span><h2>Event Management</h2><p>Review Department Head event requests and cancellation requests.</p></div>
-    </div>
-    <?php if ($notice !== ''): ?><div class="admin-panel" role="status"><?= adminEscape($notice) ?></div><?php endif; ?>
-    <?php if ($changeRequests !== []): ?>
-        <section class="admin-panel admin-integrity-panel">
-            <div class="admin-panel-heading"><div><h3>Approved event change requests</h3><p><?= count($changeRequests) ?> schedule change requests awaiting review.</p></div></div>
-            <div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Event</th><th>Department</th><th>Requested by</th><th>Submitted</th><th>Review</th></tr></thead><tbody>
-                <?php foreach ($changeRequests as $changeRequest): ?>
-                    <tr><td data-label="Event"><?= adminEscape($changeRequest['event_title']) ?><small><?= adminEscape(date('M j, Y', strtotime($changeRequest['start_at']))) ?></small></td><td data-label="Department"><?= adminEscape($changeRequest['department_name']) ?></td><td data-label="Requested by"><?= adminEscape($changeRequest['requester']) ?></td><td data-label="Submitted"><?= adminEscape(date('M j, Y · g:i A', strtotime($changeRequest['requested_at']))) ?></td><td data-label="Review"><a class="admin-action-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/view.php?id=<?= (int) $changeRequest['event_id'] ?>&change_request_id=<?= (int) $changeRequest['change_request_id'] ?>">Review changes</a></td></tr>
-                <?php endforeach; ?>
-            </tbody></table></div>
-        </section>
+<section class="ad-page">
+    <header class="ad-head">
+        <div>
+            <h1>Events</h1>
+            <p>Review requests and monitor events for the current academic period.</p>
+        </div>
+        <div class="ad-head-actions">
+            <a class="ad-btn" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/export.php<?= $exportQuery !== '' ? '?' . adminEscape($exportQuery) : '' ?>">Export CSV</a>
+        </div>
+    </header>
+
+    <?php if ($notice !== ''): ?>
+        <div class="ad-notice" role="status"><?= adminEscape($notice) ?></div>
     <?php endif; ?>
-    <form class="admin-filters" method="get" action="<?= adminEscape($adminBaseUrl) ?>/admin/events/index.php">
-        <label class="admin-search-field"><span class="visually-hidden">Search event</span><input type="search" name="q" value="<?= adminEscape($query) ?>" placeholder="Search event or venue"></label>
-        <label><span class="visually-hidden">Filter by status</span><select name="status">
-            <option value="">All statuses</option>
-            <?php foreach ($statuses as $status): ?>
-                <option value="<?= adminEscape($status) ?>" <?= $statusFilter === $status ? 'selected' : '' ?>><?= adminEscape(ucwords(str_replace('_', ' ', $status))) ?></option>
+
+    <?php if ($changeRequests !== []): ?>
+        <div class="ad-card">
+            <h2 class="ad-card-title">Schedule change requests</h2>
+            <p class="ad-card-sub"><?= count($changeRequests) ?> awaiting review.</p>
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Event</th>
+                            <th scope="col">Department</th>
+                            <th scope="col">Requested by</th>
+                            <th scope="col">Submitted</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($changeRequests as $changeRequest): ?>
+                            <tr>
+                                <td>
+                                    <span class="ad-strong"><?= adminEscape($changeRequest['event_title']) ?></span>
+                                    <div class="ad-muted"><?= adminEscape(date('M j, Y', strtotime($changeRequest['start_at']))) ?></div>
+                                </td>
+                                <td><?= adminEscape($changeRequest['department_name']) ?></td>
+                                <td><?= adminEscape($changeRequest['requester']) ?></td>
+                                <td><?= adminEscape(date('M j, Y · g:i A', strtotime($changeRequest['requested_at']))) ?></td>
+                                <td><a class="ad-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/view.php?id=<?= (int) $changeRequest['event_id'] ?>&amp;change_request_id=<?= (int) $changeRequest['change_request_id'] ?>">Review</a></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <div class="ad-card">
+        <nav class="ad-tabs" aria-label="Filter events by status">
+            <a href="<?= adminEscape($tabHref('')) ?>" <?= $statusFilter === '' ? 'aria-current="page"' : '' ?>>All <?= $allCount ?></a>
+            <?php foreach ($statusTabs as $status => [$label]): ?>
+                <?php $count = (int) ($statusCounts[$status] ?? 0); ?>
+                <?php if ($count > 0 || $statusFilter === $status || in_array($status, ['pending', 'approved', 'completed', 'rejected'], true)): ?>
+                    <a href="<?= adminEscape($tabHref($status)) ?>" <?= $statusFilter === $status ? 'aria-current="page"' : '' ?>><?= adminEscape($label) ?> <?= $count ?></a>
+                <?php endif; ?>
             <?php endforeach; ?>
-        </select></label>
-        <label><span class="visually-hidden">Filter by schedule phase</span><select name="phase"><option value="">All schedule phases</option><?php foreach (['upcoming', 'ongoing', 'completed'] as $phase): ?><option value="<?= $phase ?>" <?= $phaseFilter === $phase ? 'selected' : '' ?>><?= ucfirst($phase) ?></option><?php endforeach; ?></select></label>
-        <label><span class="visually-hidden">Filter by department</span><select name="department_id"><option value="">All departments</option><?php foreach ($departments as $department): ?><option value="<?= (int) $department['department_id'] ?>" <?= $departmentId === (int) $department['department_id'] ? 'selected' : '' ?>><?= adminEscape($department['department_name']) ?></option><?php endforeach; ?></select></label>
-        <label><span class="visually-hidden">Filter by semester and academic year</span><select name="academic_period_id"><option value="">All academic periods</option><?php foreach ($periods as $period): ?><option value="<?= (int) $period['academic_period_id'] ?>" <?= $periodId === (int) $period['academic_period_id'] ? 'selected' : '' ?>><?= adminEscape($period['academic_year'] . ' · ' . $period['semester']) ?></option><?php endforeach; ?></select></label>
-        <label><span class="visually-hidden">Start date from</span><input type="date" name="date_from" value="<?= adminEscape($dateFrom) ?>"></label>
-        <label><span class="visually-hidden">Start date to</span><input type="date" name="date_to" value="<?= adminEscape($dateTo) ?>"></label>
-        <button class="admin-filter-button" type="submit">Filter</button>
-        <a class="admin-reset-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/index.php">Clear</a>
-    </form>
-    <div class="admin-panel">
+        </nav>
+
+        <form class="ad-toolbar" method="get" action="<?= adminEscape($adminBaseUrl) ?>/admin/events/index.php">
+            <?php if ($statusFilter !== ''): ?><input type="hidden" name="status" value="<?= adminEscape($statusFilter) ?>"><?php endif; ?>
+            <label class="ad-search">
+                <?= adminIcon('search') ?>
+                <span class="visually-hidden">Search events</span>
+                <input type="search" name="q" value="<?= adminEscape($filters['q']) ?>" placeholder="Search event title or venue">
+            </label>
+            <label>
+                <span class="visually-hidden">Filter by department</span>
+                <select name="department_id" data-autosubmit>
+                    <option value="">All departments</option>
+                    <?php foreach ($departments as $department): ?>
+                        <option value="<?= (int) $department['department_id'] ?>" <?= $filters['department_id'] === (int) $department['department_id'] ? 'selected' : '' ?>><?= adminEscape($department['department_name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <label>
+                <span class="visually-hidden">Filter by academic period</span>
+                <select name="academic_period_id" data-autosubmit>
+                    <option value="all" <?= $filters['period_all'] ? 'selected' : '' ?>>All academic periods</option>
+                    <?php foreach ($periods as $period): ?>
+                        <option value="<?= (int) $period['academic_period_id'] ?>" <?= $filters['period_id'] === (int) $period['academic_period_id'] ? 'selected' : '' ?>><?= adminEscape(adminPeriodLabel($period['academic_year'], $period['semester'])) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <span class="ad-date-picker">
+                <button class="ad-date-btn<?= $filters['event_date'] !== '' ? ' is-set' : '' ?>" type="button" data-date-open aria-label="Filter by event date<?= $filters['event_date'] !== '' ? ' (' . adminEscape($filters['event_date']) . ')' : '' ?>" title="<?= $filters['event_date'] !== '' ? adminEscape(date('M j, Y', strtotime($filters['event_date']))) : 'Filter by event date' ?>"><?= adminIcon('calendar') ?></button>
+                <input class="ad-date-input" type="date" name="event_date" value="<?= adminEscape($filters['event_date']) ?>" tabindex="-1" aria-hidden="true">
+                <?php if ($filters['event_date'] !== ''): ?>
+                    <?php $noDateQuery = array_diff_key($sharedQuery, ['event_date' => true]) + ($statusFilter !== '' ? ['status' => $statusFilter] : []); ?>
+                    <a class="ad-date-clear" href="?<?= adminEscape(http_build_query($noDateQuery)) ?>">Clear date</a>
+                <?php endif; ?>
+            </span>
+            <button class="visually-hidden" type="submit">Apply filters</button>
+        </form>
+
         <?php if ($events === []): ?>
-            <p>No matching events.</p>
+            <div class="ad-empty">
+                <strong>No events found</strong>
+                Try a different tab, search or period.
+            </div>
         <?php else: ?>
-            <div class="admin-table-wrap">
-                <table class="admin-table">
-                    <thead><tr><th scope="col">Event</th><th scope="col">Department</th><th scope="col">Period</th><th scope="col">Requested by</th><th scope="col">Schedule</th><th scope="col">Status</th><th scope="col">Review</th></tr></thead>
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Event</th>
+                            <th scope="col">Department</th>
+                            <th scope="col">Date</th>
+                            <th scope="col">Requested by</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
                     <tbody>
                         <?php foreach ($events as $event): ?>
-                            <?php $headName = trim(($event['first_name'] ?? '') . ' ' . (($event['middle_name'] ?? '') ? $event['middle_name'] . ' ' : '') . ($event['last_name'] ?? '')); ?>
+                            <?php
+                            $status = $event['event_status'];
+                            $needsReview = in_array($status, ['pending', 'cancellation_requested'], true);
+                            $headName = adminFullName($event['first_name'], $event['middle_name'], $event['last_name']);
+                            ?>
                             <tr>
-                                <td data-label="Event"><strong><?= adminEscape($event['event_title']) ?></strong></td>
-                                <td data-label="Department"><?= adminEscape($event['department_name']) ?></td>
-                                <td data-label="Period"><?= adminEscape($event['academic_year'] . ' · ' . $event['semester']) ?></td>
-                                <td data-label="Requested by"><?= adminEscape($headName ?: '—') ?></td>
-                                <td data-label="Schedule"><?= adminEscape(date('M j, Y · g:i A', strtotime($event['start_at']))) ?><span><?= adminEscape(date('M j, Y · g:i A', strtotime($event['end_at']))) ?></span></td>
-                                <td data-label="Status"><span class="status-pill status-<?= adminEscape($event['event_status']) ?>"><?= adminEscape(ucwords(str_replace('_', ' ', $event['event_status']))) ?></span></td>
-                                <td data-label="Review"><a class="admin-action-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/view.php?id=<?= (int) $event['event_id'] ?>">View request</a></td>
+                                <td class="ad-strong"><?= adminEscape($event['event_title']) ?></td>
+                                <td><?= adminEscape($event['department_name']) ?></td>
+                                <td><?= adminEscape(date('M j, Y', strtotime($event['start_at']))) ?></td>
+                                <td><?= adminEscape($headName ?: '—') ?></td>
+                                <td><span class="ad-pill <?= adminEscape($statusTabs[$status][1] ?? 'ad-pill-gray') ?>"><?= adminEscape($statusTabs[$status][0] ?? ucwords(str_replace('_', ' ', $status))) ?></span></td>
+                                <td><a class="ad-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/events/view.php?id=<?= (int) $event['event_id'] ?>"><?= $needsReview ? 'Review' : 'View' ?></a></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         <?php endif; ?>
+
+        <?php adminListFooter($page, EVENTS_PER_PAGE, $total, count($events), 'events'); ?>
     </div>
 </section>
+
+<script>
+document.querySelectorAll('[data-autosubmit]').forEach(function (select) {
+    select.addEventListener('change', function () { select.form.submit(); });
+});
+document.querySelectorAll('[data-date-open]').forEach(function (button) {
+    var input = button.parentNode.querySelector('input[type="date"]');
+    button.addEventListener('click', function () {
+        if (typeof input.showPicker === 'function') { input.showPicker(); } else { input.focus(); input.click(); }
+    });
+    input.addEventListener('change', function () { input.form.submit(); });
+});
+</script>
 
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 

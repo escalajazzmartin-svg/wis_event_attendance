@@ -1,5 +1,7 @@
 <?php
 
+require_once __DIR__ . '/timezone.php';
+
 if (!defined('BASE_URL')) {
     $appRoot = realpath(__DIR__ . DIRECTORY_SEPARATOR . '..');
     $documentRoot = realpath($_SERVER['DOCUMENT_ROOT'] ?? '');

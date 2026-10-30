@@ -101,7 +101,7 @@ if ($status === 'approved') {
                     <li>Absent cutoff / attendance closing: <?= studentEscape(studentDateTime($event['absent_after'])) ?></li>
                 </ul>
             <?php else: ?>
-                <p>Attendance time rules have not been published for this event. Present your barcode at an authorized attendance station during the event.</p>
+                <p>Attendance time rules have not been published for this event. Show your QR code at an authorized attendance station during the event.</p>
             <?php endif; ?>
         </section>
         <?php if ($event['event_status'] === 'cancellation_requested'): ?>
@@ -128,7 +128,9 @@ if ($status === 'approved') {
                     <?php if ($attendance['check_in_at']): ?> · recorded <?= studentEscape(studentDateTime($attendance['check_in_at'])) ?><?php endif; ?>
                 </p>
                 <?php if ($attendance['remarks']): ?><p><?= studentEscape($attendance['remarks']) ?></p><?php endif; ?>
-                <a class="management-link" href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/create.php?attendance_id=<?= (int) $attendance['attendance_id'] ?>">Appeal this record</a>
+                <?php if (in_array($attendance['attendance_status'], ['absent', 'late'], true)): ?>
+                    <a class="management-link" href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/create.php?attendance_id=<?= (int) $attendance['attendance_id'] ?>">Appeal this record</a>
+                <?php endif; ?>
             </section>
         <?php endif; ?>
     </article>

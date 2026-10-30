@@ -18,15 +18,13 @@ $stmt = $pdo->prepare(
         ON e.event_id = ea.event_id
      WHERE aa.appeal_id = ?
        AND aa.student_id = ?
-       AND ea.student_id = ?
-       AND e.department_id = ?'
+       AND ea.student_id = ?'
 );
 
 $stmt->execute([
     $appealId,
     $studentId,
-    $studentId,
-    $studentDepartmentId
+    $studentId
 ]);
 
 $storedPath = $stmt->fetchColumn();

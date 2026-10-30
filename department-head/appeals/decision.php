@@ -14,11 +14,13 @@ if (!dhVerifyCsrf($_POST['csrf_token'] ?? null)) {
 
 $appealId = filter_var($_POST['appeal_id'] ?? null, FILTER_VALIDATE_INT);
 $decision = $_POST['decision'] ?? '';
+$approvedStatus = $_POST['approved_status'] ?? 'excused';
 $remarks = trim(is_string($_POST['reviewer_remarks'] ?? null) ? $_POST['reviewer_remarks'] : '');
 
 if (
     $appealId === false || $appealId < 1 ||
     !in_array($decision, ['approved', 'rejected'], true) ||
+    ($decision === 'approved' && !in_array($approvedStatus, ['present', 'late', 'excused'], true)) ||
     $remarks === '' || dhCharacterLength($remarks) > 2000 ||
     ($_POST['proof_verified'] ?? null) !== '1'
 ) {
@@ -36,23 +38,17 @@ try {
          FROM attendance_appeals aa
          INNER JOIN event_attendance ea ON ea.attendance_id = aa.attendance_id
          INNER JOIN events e ON e.event_id = ea.event_id
-         INNER JOIN students s ON s.student_id = aa.student_id
          WHERE aa.appeal_id = ? AND e.department_id = ?
-           AND s.department_id = ? AND ea.student_id = aa.student_id
+           AND ea.student_id = aa.student_id
          FOR UPDATE'
     );
-    $appealStmt->execute([$appealId, $departmentId, $departmentId]);
+    $appealStmt->execute([$appealId, $departmentId]);
     $appeal = $appealStmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$appeal || $appeal['appeal_status'] !== 'pending') {
         $pdo->rollBack();
         http_response_code(409);
         exit('This appeal is no longer pending or does not belong to your department.');
-    }
-    if ($decision === 'approved' && empty($appeal['evidence_path'])) {
-        $pdo->rollBack();
-        http_response_code(400);
-        exit('An appeal cannot be approved without submitted supporting proof.');
     }
 
     $review = $pdo->prepare(
@@ -66,15 +62,16 @@ try {
     if ($decision === 'approved') {
         $newAttendanceRemarks = trim(
             ($appeal['attendance_remarks'] ? $appeal['attendance_remarks'] . "\n" : '') .
-            'Excused after approved appeal: ' . $remarks
+            ucfirst($approvedStatus) . ' after approved appeal: ' . $remarks
         );
         $attendanceUpdate = $pdo->prepare(
             "UPDATE event_attendance
-             SET attendance_status = 'excused', record_source = 'appeal',
+             SET attendance_status = ?, record_source = 'appeal',
                  recorded_by_user_id = ?, remarks = ?
              WHERE attendance_id = ?"
         );
         $attendanceUpdate->execute([
+            $approvedStatus,
             $_SESSION['user_id'],
             substr($newAttendanceRemarks, 0, 500),
             $appeal['attendance_id'],
@@ -91,7 +88,7 @@ try {
             $_SESSION['user_id'],
             'appeal_approved',
             json_encode(['attendance_status' => $appeal['attendance_status'], 'record_source' => $appeal['record_source']]),
-            json_encode(['attendance_status' => 'excused', 'record_source' => 'appeal']),
+            json_encode(['attendance_status' => $approvedStatus, 'record_source' => 'appeal']),
             $remarks,
         ]);
     }

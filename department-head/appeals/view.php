@@ -15,16 +15,16 @@ $stmt = $pdo->prepare(
             aa.submitted_at, aa.reviewed_at, aa.reviewer_remarks,
             ea.attendance_status, ea.event_id,
             e.event_title, e.start_at, e.department_id,
-            s.student_number, s.first_name, s.middle_name, s.last_name
+            r.student_number, r.first_name, r.middle_name, r.last_name
      FROM attendance_appeals aa
      INNER JOIN event_attendance ea ON ea.attendance_id = aa.attendance_id
      INNER JOIN events e ON e.event_id = ea.event_id
-     INNER JOIN students s ON s.student_id = aa.student_id
+     INNER JOIN event_attendance_roster r
+        ON r.event_id = ea.event_id AND r.student_id = aa.student_id
      WHERE aa.appeal_id = ? AND e.department_id = ?
-       AND s.department_id = ?
      LIMIT 1'
 );
-$stmt->execute([$appealId, $departmentId, $departmentId]);
+$stmt->execute([$appealId, $departmentId]);
 $appeal = $stmt->fetch(PDO::FETCH_ASSOC);
 if (!$appeal) {
     http_response_code(404);
@@ -79,6 +79,14 @@ $studentName = trim(
                     <label for="reviewer_remarks">Review remarks</label>
                     <textarea id="reviewer_remarks" name="reviewer_remarks" maxlength="2000" required rows="4"></textarea>
                 </div>
+                <div class="management-field">
+                    <label for="approved_status">Corrected status if approved</label>
+                    <select id="approved_status" name="approved_status">
+                        <option value="excused">Excused</option>
+                        <option value="present">Present</option>
+                        <option value="late">Late</option>
+                    </select>
+                </div>
                 <label class="management-field-full">
                     <input type="checkbox" name="proof_verified" value="1" required>
                     <?= !empty($appeal['evidence_path'])
@@ -86,7 +94,7 @@ $studentName = trim(
                         : "I reviewed the student's reason; no supporting proof was attached." ?>
                 </label>
                 <div class="management-form-actions">
-                    <button class="management-button" type="submit" name="decision" value="approved" <?= empty($appeal['evidence_path']) ? 'disabled' : '' ?>>Approve and mark excused</button>
+                    <button class="management-button" type="submit" name="decision" value="approved">Approve appeal</button>
                     <button class="management-button management-button-secondary" type="submit" name="decision" value="rejected">Reject appeal</button>
                 </div>
             </form>

@@ -1,0 +1,427 @@
+/*
+ * WEAMMS visual refresh
+ * Traditional school branding: WIS maroon, gold, white, and warm gray.
+ * This file intentionally changes presentation only; application logic is untouched.
+ */
+:root {
+    --weamms-maroon: #8b1e1e;
+    --weamms-maroon-dark: #641414;
+    --weamms-maroon-light: #a52b2b;
+    --weamms-gold: #f2c300;
+    --weamms-gold-soft: #fff7d6;
+    --weamms-page: #f6f5f3;
+    --weamms-panel: #ffffff;
+    --weamms-border: #e6e0dc;
+    --weamms-text: #292524;
+    --weamms-muted: #78716c;
+    --weamms-shadow: 0 3px 14px rgba(48, 28, 20, .055);
+    --weamms-radius: 12px;
+}
+
+body.admin-dashboard-page,
+body.department-head-dashboard-page,
+body.student-dashboard-page {
+    background: var(--weamms-page);
+    color: var(--weamms-text);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+/* Shared sidebar: keep the existing WIS maroon and gold identity. */
+.admin-dashboard-page .student-sidebar,
+.department-head-dashboard-page .student-sidebar,
+.student-dashboard-page .student-sidebar {
+    background: var(--weamms-maroon-dark);
+    box-shadow: 3px 0 18px rgba(55, 18, 18, .08);
+}
+
+.admin-dashboard-page .sidebar-brand,
+.department-head-dashboard-page .sidebar-brand,
+.student-dashboard-page .sidebar-brand {
+    border-bottom-color: rgba(255, 255, 255, .2);
+    padding-bottom: 22px;
+}
+
+.admin-dashboard-page .sidebar-brand h2,
+.department-head-dashboard-page .sidebar-brand h2,
+.student-dashboard-page .sidebar-brand h2 {
+    color: var(--weamms-gold);
+    letter-spacing: .3px;
+}
+
+.admin-dashboard-page .student-navigation,
+.department-head-dashboard-page .student-navigation,
+.student-dashboard-page .student-navigation {
+    gap: 5px;
+    margin-top: 22px;
+}
+
+.admin-dashboard-page .student-navigation a,
+.department-head-dashboard-page .student-navigation a,
+.student-dashboard-page .student-navigation a,
+.admin-dashboard-page .logout-link,
+.department-head-dashboard-page .logout-link,
+.student-dashboard-page .logout-link {
+    min-height: 43px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: rgba(255, 255, 255, .9);
+    font-size: 13.5px;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.admin-dashboard-page .student-navigation a:hover,
+.department-head-dashboard-page .student-navigation a:hover,
+.student-dashboard-page .student-navigation a:hover {
+    background: rgba(255, 255, 255, .09);
+    color: #fff;
+}
+
+.admin-dashboard-page .student-navigation a.active,
+.department-head-dashboard-page .student-navigation a.active,
+.student-dashboard-page .student-navigation a.active {
+    background: rgba(242, 195, 0, .13);
+    border-color: rgba(242, 195, 0, .24);
+    color: var(--weamms-gold);
+    font-weight: 700;
+}
+
+.admin-dashboard-page .sidebar-bottom,
+.department-head-dashboard-page .sidebar-bottom,
+.student-dashboard-page .sidebar-bottom {
+    border-top-color: rgba(255, 255, 255, .2);
+}
+
+/* Header and content width */
+.admin-dashboard-page .dashboard-main,
+.department-head-dashboard-page .dashboard-main,
+.student-dashboard-page .dashboard-main {
+    background: var(--weamms-page);
+}
+
+.admin-dashboard-page .dashboard-topbar,
+.department-head-dashboard-page .dashboard-topbar,
+.student-dashboard-page .dashboard-topbar {
+    min-height: 82px;
+    padding: 15px 32px;
+    border-bottom: 1px solid var(--weamms-border);
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 2px 8px rgba(35, 20, 12, .025);
+}
+
+.dashboard-topbar h1 {
+    color: var(--weamms-maroon-dark);
+    font-family: Inter, "Segoe UI", Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: .25px;
+}
+
+.dashboard-topbar .eyebrow,
+.admin-page-heading .admin-eyebrow {
+    color: var(--weamms-maroon);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+}
+
+.dashboard-topbar .student-avatar {
+    background: var(--weamms-maroon);
+    color: #fff;
+    box-shadow: none;
+}
+
+.dashboard-topbar .student-account-info strong {
+    color: var(--weamms-text);
+    font-size: 13px;
+}
+
+.dashboard-topbar .student-account-info span {
+    color: var(--weamms-muted);
+    font-size: 12px;
+}
+
+.admin-content-section,
+.department-head-dashboard-page .dashboard-section,
+.student-dashboard-page .dashboard-section,
+.department-head-dashboard-page .management-page,
+.student-dashboard-page .student-content-section {
+    padding-top: 26px;
+}
+
+.admin-content-section {
+    padding-right: 30px;
+    padding-left: 30px;
+}
+
+.admin-page-heading,
+.section-heading,
+.department-head-dashboard-page .section-heading {
+    margin-bottom: 20px;
+}
+
+.admin-page-heading h2,
+.section-heading h2,
+.department-head-dashboard-page .section-heading h2,
+.student-dashboard-page .section-heading h2 {
+    color: var(--weamms-maroon-dark);
+    font-size: 23px;
+    font-weight: 750;
+    letter-spacing: -.35px;
+}
+
+.admin-page-heading p,
+.admin-panel-heading p,
+.section-heading p {
+    color: var(--weamms-muted);
+    font-size: 13px;
+}
+
+/* Panels and summary cards */
+.admin-panel,
+.admin-summary-card,
+.department-stat-card,
+.department-action-card,
+.stat-card,
+.student-stat-card,
+.student-content-panel,
+.student-attendance-card,
+.department-chart-panel,
+.attendance-monitor-panel {
+    border: 1px solid var(--weamms-border) !important;
+    border-radius: var(--weamms-radius) !important;
+    background: var(--weamms-panel) !important;
+    box-shadow: var(--weamms-shadow) !important;
+}
+
+.admin-panel,
+.student-content-panel,
+.department-chart-panel,
+.attendance-monitor-panel {
+    padding: 22px;
+}
+
+.admin-panel-heading h3,
+.department-head-dashboard-page .panel-heading h3,
+.attendance-monitor-panel h3 {
+    color: var(--weamms-maroon-dark);
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.admin-summary-card,
+.department-stat-card,
+.stat-card,
+.student-stat-card {
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.admin-summary-card:hover,
+.department-stat-card:hover,
+.stat-card:hover,
+.student-stat-card:hover {
+    border-color: #d8b9b0 !important;
+    box-shadow: 0 5px 18px rgba(48, 28, 20, .075) !important;
+}
+
+.admin-summary-icon,
+.department-stat-icon,
+.stat-icon {
+    border-radius: 10px;
+}
+
+.admin-summary-icon:not(.admin-icon-blue):not(.admin-icon-gold):not(.admin-icon-green) {
+    background: #f7e9e6;
+    color: var(--weamms-maroon);
+}
+
+/* Buttons and links */
+.admin-dashboard-page .admin-action-link,
+.admin-dashboard-page .admin-page-heading a,
+.department-head-dashboard-page .management-button,
+.student-dashboard-page .management-button,
+.department-head-dashboard-page .primary-action,
+.student-dashboard-page .primary-action {
+    transition: background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.admin-dashboard-page .admin-action-link,
+.admin-dashboard-page .admin-page-heading a,
+.department-head-dashboard-page .management-button,
+.student-dashboard-page .management-button {
+    border-radius: 7px;
+    font-weight: 700;
+}
+
+.admin-dashboard-page .admin-page-heading a,
+.department-head-dashboard-page .management-button:not(.management-button-secondary),
+.student-dashboard-page .management-button:not(.management-button-secondary) {
+    background: var(--weamms-maroon);
+    border-color: var(--weamms-maroon);
+    color: #fff;
+}
+
+.admin-dashboard-page .admin-page-heading a:hover,
+.department-head-dashboard-page .management-button:not(.management-button-secondary):hover,
+.student-dashboard-page .management-button:not(.management-button-secondary):hover {
+    background: var(--weamms-maroon-dark);
+    border-color: var(--weamms-maroon-dark);
+}
+
+/* Consistent form controls across management pages */
+.admin-dashboard-page input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.admin-dashboard-page select,
+.admin-dashboard-page textarea,
+.department-head-dashboard-page input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.department-head-dashboard-page select,
+.department-head-dashboard-page textarea,
+.student-dashboard-page input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+.student-dashboard-page select,
+.student-dashboard-page textarea {
+    border-color: #d8d0cb;
+    border-radius: 7px;
+    background-color: #fff;
+    color: var(--weamms-text);
+    font: inherit;
+}
+
+.admin-dashboard-page input:focus,
+.admin-dashboard-page select:focus,
+.admin-dashboard-page textarea:focus,
+.department-head-dashboard-page input:focus,
+.department-head-dashboard-page select:focus,
+.department-head-dashboard-page textarea:focus,
+.student-dashboard-page input:focus,
+.student-dashboard-page select:focus,
+.student-dashboard-page textarea:focus {
+    border-color: var(--weamms-maroon);
+    outline: 0;
+    box-shadow: 0 0 0 3px rgba(139, 30, 30, .1);
+}
+
+/* Tables: quiet header, readable rows, subtle hover */
+.admin-dashboard-page .admin-table,
+.department-head-dashboard-page .management-table,
+.department-head-dashboard-page .student-table,
+.student-dashboard-page .student-table {
+    border-collapse: separate;
+    border-spacing: 0;
+    color: var(--weamms-text);
+    font-size: 13px;
+}
+
+.admin-dashboard-page .admin-table th,
+.department-head-dashboard-page .management-table th,
+.department-head-dashboard-page .student-table th,
+.student-dashboard-page .student-table th {
+    background: #f8f4f1;
+    color: #65534c;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .45px;
+    text-transform: uppercase;
+}
+
+.admin-dashboard-page .admin-table td,
+.department-head-dashboard-page .management-table td,
+.department-head-dashboard-page .student-table td,
+.student-dashboard-page .student-table td {
+    border-bottom-color: #eee8e4;
+    vertical-align: middle;
+}
+
+.admin-dashboard-page .admin-table tbody tr:hover,
+.department-head-dashboard-page .management-table tbody tr:hover,
+.student-dashboard-page .student-table tbody tr:hover {
+    background: #fcf9f7;
+}
+
+.admin-dashboard-page a,
+.department-head-dashboard-page a,
+.student-dashboard-page a {
+    text-underline-offset: 3px;
+}
+
+/* Status pills keep familiar, accessible status colors */
+.admin-dashboard-page .status-pill,
+.department-head-dashboard-page .status-pill,
+.student-dashboard-page .status-pill,
+.student-dashboard-page .student-status-pill {
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 750;
+    letter-spacing: .1px;
+}
+
+/* Lists and empty states */
+.admin-recent-list article,
+.department-head-dashboard-page .recent-list article {
+    border-bottom-color: #eee8e4;
+}
+
+.admin-recent-list article:last-child,
+.department-head-dashboard-page .recent-list article:last-child {
+    border-bottom: 0;
+}
+
+/* Keep all sections usable on tablet and phone */
+@media (max-width: 1100px) {
+    .admin-dashboard-page .dashboard-topbar,
+    .department-head-dashboard-page .dashboard-topbar,
+    .student-dashboard-page .dashboard-topbar {
+        padding-right: 22px;
+        padding-left: 22px;
+    }
+
+    .admin-content-section {
+        padding-right: 22px;
+        padding-left: 22px;
+    }
+}
+
+@media (max-width: 760px) {
+    .admin-dashboard-page .dashboard-topbar,
+    .department-head-dashboard-page .dashboard-topbar,
+    .student-dashboard-page .dashboard-topbar {
+        position: relative;
+        align-items: flex-start;
+        min-height: auto;
+        padding: 17px 16px;
+    }
+
+    .dashboard-topbar h1 {
+        font-size: 13px;
+    }
+
+    .dashboard-topbar .student-account-info {
+        display: none;
+    }
+
+    .admin-content-section {
+        padding: 20px 14px 0;
+    }
+
+    .admin-page-heading h2,
+    .section-heading h2 {
+        font-size: 20px;
+    }
+
+    .admin-panel,
+    .student-content-panel,
+    .department-chart-panel,
+    .attendance-monitor-panel {
+        padding: 16px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+    }
+}

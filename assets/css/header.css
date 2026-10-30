@@ -46,7 +46,7 @@
     display: block;
     margin-bottom: 4px;
     color: #777777;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     font-size: 14px;
     font-weight: 600;
     letter-spacing: 1px;
@@ -55,7 +55,7 @@
 .dashboard-topbar p {
     margin: 3px 0 0;
     color: #777777;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     font-size: 14px;
     line-height: 1.5;
 }
@@ -99,7 +99,7 @@
     height: 40px;
     background: var(--wis-maroon, #8B1E1E);
     color: var(--wis-white, #FFFFFF);
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     font-size: 14px;
 }
 
@@ -129,14 +129,14 @@
 
 .dashboard-topbar .student-account-info strong {
     color: var(--wis-black, #171717);
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     font-size: 14px;
     font-weight: 600;
 }
 
 .dashboard-topbar .student-account-info span {
     color: #777777;
-    font-family: 'Inter', Arial, sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
     font-size: 14px;
 }
 

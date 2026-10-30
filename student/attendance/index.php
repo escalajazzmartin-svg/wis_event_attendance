@@ -24,10 +24,10 @@ $attendanceStmt = $pdo->prepare(
             ORDER BY aa_latest.submitted_at DESC, aa_latest.appeal_id DESC
             LIMIT 1
         )
-     WHERE ea.student_id = ? AND e.department_id = ?
+     WHERE ea.student_id = ?
      ORDER BY e.start_at DESC, ea.attendance_id DESC"
 );
-$attendanceStmt->execute([$studentId, $studentDepartmentId]);
+$attendanceStmt->execute([$studentId]);
 $records = $attendanceStmt->fetchAll(PDO::FETCH_ASSOC);
 $summary = ['present' => 0, 'late' => 0, 'absent' => 0, 'excused' => 0];
 foreach ($records as $record) {
@@ -41,9 +41,9 @@ foreach ($records as $record) {
     <div class="section-heading">
         <div>
             <h2>My Attendance</h2>
-            <p>View your personal event attendance and present your barcode at an authorized station.</p>
+            <p>View your personal event attendance and show your QR code at an authorized station.</p>
         </div>
-        <a class="management-button" href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/scan.php">View My Barcode</a>
+        <a class="management-button" href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/scan.php">View My QR Code</a>
     </div>
     <div class="student-attendance-stats student-attendance-summary">
         <div>
@@ -96,12 +96,22 @@ foreach ($records as $record) {
                                 <td data-label="Status"><span class="status-pill status-<?= studentEscape($record['attendance_status']) ?>"><?= studentEscape(ucfirst($record['attendance_status'])) ?></span></td>
                                 <td data-label="Timestamp"><?= studentEscape(studentDateTime($record['check_in_at'])) ?></td>
                                 <td data-label="Appeal">
-                                    <?php if ($record['appeal_id']): ?>
+                                    <?php
+                                    $latestAppealStatus = (string) ($record['appeal_status'] ?? '');
+                                    $canAppeal = in_array($record['attendance_status'], ['absent', 'late'], true)
+                                        && (!$record['appeal_id'] || $latestAppealStatus === 'withdrawn');
+                                    ?>
+                                    <?php if ($record['appeal_id'] && $latestAppealStatus !== 'withdrawn'): ?>
                                         <a href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/view.php?id=<?= (int) $record['appeal_id'] ?>">
-                                            <?= studentEscape(ucfirst($record['appeal_status'])) ?>
+                                            <?= studentEscape(ucfirst($latestAppealStatus)) ?>
+                                        </a>
+                                    <?php elseif ($canAppeal): ?>
+                                        <a class="student-appeal-link" href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/create.php?attendance_id=<?= (int) $record['attendance_id'] ?>">
+                                            <i class="fa-solid fa-scale-balanced" aria-hidden="true"></i>
+                                            <?= $record['appeal_id'] ? 'Appeal again' : 'Appeal' ?>
                                         </a>
                                     <?php else: ?>
-                                        <a href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/create.php?attendance_id=<?= (int) $record['attendance_id'] ?>">Appeal</a>
+                                        <span aria-label="No appeal available">—</span>
                                     <?php endif; ?>
                                 </td>
                             </tr>

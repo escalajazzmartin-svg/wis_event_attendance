@@ -59,6 +59,9 @@ try {
          WHERE event_id = ?'
     );
     $update->execute([$newStatus, $newRemarks, $_SESSION['user_id'], $eventId]);
+    if ($newStatus === 'approved') {
+        snapshotEventAttendanceRoster($pdo, (int) $eventId);
+    }
     if ($newStatus === 'cancelled') {
         $pdo->prepare(
             "UPDATE event_change_requests

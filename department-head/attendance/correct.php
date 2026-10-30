@@ -17,15 +17,15 @@ if ($eventId === false || $eventId < 1 || $studentId === false || $studentId < 1
 
 $recordStmt = $pdo->prepare(
     'SELECT e.event_id, e.event_title, e.department_id,
-            s.student_id, s.student_number, s.first_name, s.middle_name,
-            s.last_name, ea.attendance_id, ea.attendance_status,
+            r.student_id, r.student_number, r.first_name, r.middle_name,
+            r.last_name, ea.attendance_id, ea.attendance_status,
             ea.check_in_at, ea.record_source, ea.remarks
      FROM events e
-     INNER JOIN students s ON s.department_id = e.department_id
+     INNER JOIN event_attendance_roster r ON r.event_id = e.event_id
      LEFT JOIN event_attendance ea
-        ON ea.event_id = e.event_id AND ea.student_id = s.student_id
+        ON ea.event_id = e.event_id AND ea.student_id = r.student_id
      WHERE e.event_id = ? AND e.department_id = ?
-       AND s.student_id = ?
+       AND r.student_id = ?
      LIMIT 1'
 );
 $recordStmt->execute([$eventId, $departmentId, $studentId]);
@@ -57,8 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $scopeLock = $pdo->prepare(
                 'SELECT e.event_id
                  FROM events e
-                 INNER JOIN students s ON s.department_id = e.department_id
-                 WHERE e.event_id = ? AND e.department_id = ? AND s.student_id = ?
+                 INNER JOIN event_attendance_roster r ON r.event_id = e.event_id
+                 WHERE e.event_id = ? AND e.department_id = ? AND r.student_id = ?
                  FOR UPDATE'
             );
             $scopeLock->execute([$eventId, $departmentId, $studentId]);

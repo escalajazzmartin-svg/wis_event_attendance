@@ -1,11 +1,10 @@
 <?php
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/app.php';
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/event_lifecycle.php';
 
 $studentRole = strtolower(trim(
     $_SESSION['role_name'] ?? $_SESSION['role'] ?? ''
@@ -17,28 +16,34 @@ if (empty($_SESSION['user_id']) || $studentRole !== 'student') {
 }
 
 $studentStmt = $pdo->prepare(
-    'SELECT s.student_id, s.user_id, s.student_number, s.barcode_token,
+    "SELECT s.student_id, s.user_id, s.student_number, s.barcode_token,
             s.department_id, s.year_level, s.section, s.first_name,
             s.middle_name, s.last_name, s.enrollment_status,
             d.department_name
      FROM students s
      INNER JOIN departments d ON d.department_id = s.department_id
+     INNER JOIN users u ON u.user_id = s.user_id
      WHERE s.user_id = ?
-     LIMIT 1'
+       AND u.account_status = 'active'
+       AND d.is_active = 1
+     LIMIT 1"
 );
 
 $studentStmt->execute([$_SESSION['user_id']]);
 $studentProfile = $studentStmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$studentProfile) {
-    error_log('Student profile was not found for the signed-in user.');
-    http_response_code(403);
-    exit('Your account is not linked to a student profile.');
+    $_SESSION = [];
+    session_destroy();
+    header('Location: ' . BASE_URL . '/auth/student-login.php?notice=account_unavailable');
+    exit;
 }
 
 $studentId = (int) $studentProfile['student_id'];
 $studentDepartmentId = (int) $studentProfile['department_id'];
 $studentBaseUrl = BASE_URL;
+
+synchronizeEventLifecycle($pdo);
 
 if (empty($_SESSION['student_csrf_token'])) {
     $_SESSION['student_csrf_token'] = bin2hex(random_bytes(32));

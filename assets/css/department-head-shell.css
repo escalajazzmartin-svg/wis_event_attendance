@@ -1,0 +1,156 @@
+/* Department head pages that use the admin-style shell. */
+.department-head-shell .ad-note {
+    margin: 0 0 18px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    background: #fbf0c4;
+    color: #6b4e00;
+    font-size: 14px;
+}
+
+.department-head-shell .ad-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.department-head-shell .ad-split > .ad-card + .ad-card {
+    margin-top: 0;
+}
+
+.department-head-shell .ad-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #efefef;
+}
+
+.department-head-shell .ad-card-head h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.department-head-shell .ad-pad {
+    padding: 20px;
+}
+
+.department-head-shell .ad-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.department-head-shell .ad-fields .full {
+    grid-column: 1 / -1;
+}
+
+.department-head-shell .ad-fields label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.department-head-shell .ad-fields input,
+.department-head-shell .ad-fields textarea {
+    width: 100%;
+    min-height: 44px;
+    padding: 11px 14px;
+    box-sizing: border-box;
+    border: 1px solid #d9d4d0;
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+}
+
+.department-head-shell .ad-fields input[readonly],
+.department-head-shell .ad-fields textarea[readonly] {
+    background: #f6f3f0;
+    color: #555;
+}
+
+.department-head-shell .ad-fields textarea {
+    min-height: 92px;
+    resize: vertical;
+}
+
+.department-head-shell .ad-form-actions {
+    margin-top: 16px;
+}
+
+.department-head-shell .ad-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 20px;
+    border-top: 1px solid #efebe9;
+}
+
+.department-head-shell .ad-row strong {
+    display: block;
+}
+
+.department-head-shell .ad-row small {
+    color: #555;
+}
+
+.department-head-shell .ad-inline-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.department-head-shell .ad-inline-form input[type="text"] {
+    min-height: 36px;
+    padding: 0 10px;
+    border: 1px solid #d9d4d0;
+    border-radius: 6px;
+    font: inherit;
+}
+
+@media (max-width: 1100px) {
+    .department-head-shell .ad-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 760px) {
+    .department-head-shell .ad-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+.department-head-shell .ad-btn-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.department-head-shell .ad-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.department-head-shell .ad-notice-error {
+    background: #fde0e0;
+    border-color: #f3b8b8;
+    color: #9b1c1c;
+}
+
+.department-head-shell .ad-time {
+    width: 100%;
+    min-width: 170px;
+    min-height: 40px;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid #d9d4d0;
+    border-radius: 6px;
+    background: #fff;
+    font: inherit;
+    font-size: 14px;
+}

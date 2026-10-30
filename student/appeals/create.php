@@ -30,14 +30,12 @@ $recordStmt = $pdo->prepare(
      INNER JOIN events e ON e.event_id = ea.event_id
      WHERE ea.attendance_id = ?
        AND ea.student_id = ?
-       AND e.department_id = ?
      LIMIT 1'
 );
 
 $recordStmt->execute([
     $attendanceId,
-    $studentId,
-    $studentDepartmentId
+    $studentId
 ]);
 
 $record = $recordStmt->fetch(PDO::FETCH_ASSOC);
@@ -45,6 +43,12 @@ $record = $recordStmt->fetch(PDO::FETCH_ASSOC);
 if (!$record) {
     http_response_code(404);
     exit('Attendance record not found in your account.');
+}
+
+// Only disputed statuses can be appealed.
+if (!in_array($record['attendance_status'], ['absent', 'late'], true)) {
+    http_response_code(409);
+    exit('Only absent or late attendance records can be appealed.');
 }
 
 // Redirect if a pending appeal already exists.
@@ -130,14 +134,12 @@ if ($method === 'POST') {
                  INNER JOIN events e ON e.event_id = ea.event_id
                  WHERE ea.attendance_id = ?
                    AND ea.student_id = ?
-                   AND e.department_id = ?
                  FOR UPDATE'
             );
 
             $lock->execute([
                 $attendanceId,
-                $studentId,
-                $studentDepartmentId
+                $studentId
             ]);
 
             if ($lock->fetchColumn() === false) {
@@ -240,3 +242,94 @@ $studentPageTitle = 'Submit Attendance Appeal';
 $studentPageCss = 'student-appeals.css';
 
 require_once __DIR__ . '/../../includes/student_layout_start.php';
+
+$isAbsent = $record['attendance_status'] === 'absent';
+?>
+
+<section class="dashboard-section student-module-page">
+
+    <div class="section-heading">
+        <div>
+            <h2>Submit Attendance Appeal</h2>
+            <p>
+                <?= studentEscape($record['event_title']) ?> ·
+                Recorded as
+                <span class="status-pill status-<?= studentEscape($record['attendance_status']) ?>">
+                    <?= studentEscape(ucfirst($record['attendance_status'])) ?>
+                </span>
+            </p>
+        </div>
+
+        <a class="student-appeal-link"
+            href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/index.php">
+            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            Back to attendance
+        </a>
+    </div>
+
+    <div class="student-content-panel">
+
+        <?php if ($errors !== []): ?>
+            <div class="dashboard-alert student-appeal-errors" role="alert">
+                <?php foreach ($errors as $error): ?>
+                    <div><?= studentEscape($error) ?></div>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <form
+            class="student-appeal-form"
+            method="post"
+            enctype="multipart/form-data"
+            action="<?= studentEscape($studentBaseUrl) ?>/student/appeals/create.php">
+
+            <input type="hidden" name="csrf_token"
+                value="<?= studentEscape(studentCsrfToken()) ?>">
+            <input type="hidden" name="attendance_id"
+                value="<?= (int) $attendanceId ?>">
+
+            <div class="student-appeal-field">
+                <label for="appeal_reason">Explain what happened</label>
+                <textarea
+                    id="appeal_reason"
+                    name="appeal_reason"
+                    rows="6"
+                    maxlength="4000"
+                    required><?= studentEscape($reason) ?></textarea>
+                <small>Up to 4,000 characters.</small>
+            </div>
+
+            <div class="student-appeal-field">
+                <label for="evidence">
+                    Supporting proof
+                    <?= $isAbsent ? '(required)' : '(optional)' ?>
+                </label>
+                <input
+                    id="evidence"
+                    type="file"
+                    name="evidence"
+                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                    <?= $isAbsent ? 'required' : '' ?>>
+                <small>PDF, JPG, or PNG. Maximum 5 MB.</small>
+            </div>
+
+            <div class="student-appeal-form-actions">
+                <button class="student-appeal-button" type="submit">
+                    <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
+                    Submit appeal
+                </button>
+                <a class="student-appeal-button student-appeal-button-secondary"
+                    href="<?= studentEscape($studentBaseUrl) ?>/student/attendance/index.php">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</section>
+
+<?php require __DIR__ . '/../../includes/footer.php'; ?>
+
+</main>
+</body>
+
+</html>

@@ -1,7 +1,8 @@
 <?php
-session_start();
+require_once __DIR__ . '/../config/session.php';
 
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/login_rate_limit.php';
 
 // Redirect authenticated admins to their dashboard.
 if (
@@ -21,8 +22,10 @@ if (empty($_SESSION['admin_login_csrf'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $login = trim($_POST['login'] ?? '');
-    $password = $_POST['password'] ?? '';
+    $login = trim(is_string($_POST['login'] ?? null) ? $_POST['login'] : '');
+    $password = is_string($_POST['password'] ?? null)
+        ? $_POST['password']
+        : '';
     $csrfToken = $_POST['csrf_token'] ?? '';
 
     if (
@@ -30,11 +33,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         !hash_equals($_SESSION['admin_login_csrf'], $csrfToken)
     ) {
         $error = 'Invalid request. Please refresh and try again.';
-    } elseif ($login === '' || $password === '') {
+    } elseif (
+        $login === '' || strlen($login) > 100 ||
+        $password === '' || strlen($password) > 4096
+    ) {
         $error = 'Please enter your username and password.';
     } else {
         try {
-            $stmt = $pdo->prepare("
+            if (loginRateLimitIsBlocked($pdo, $login)) {
+                $error = 'Too many login attempts. Please wait 15 minutes and try again.';
+            } else {
+                $stmt = $pdo->prepare("
                 SELECT
                     u.user_id,
                     u.username,
@@ -50,41 +59,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 LIMIT 1
             ");
 
-            $stmt->execute([
-                'username' => $login,
-            ]);
+                $stmt->execute([
+                    'username' => $login,
+                ]);
 
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if (
-                $user &&
-                $user['account_status'] === 'active' &&
-                password_verify($password, $user['password_hash'])
-            ) {
-                session_regenerate_id(true);
+                if (
+                    $user &&
+                    $user['account_status'] === 'active' &&
+                    password_verify($password, $user['password_hash'])
+                ) {
+                    loginRateLimitClear($pdo, $login);
+                    session_regenerate_id(true);
 
-                $_SESSION['user_id'] = $user['user_id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['role_id'] = $user['role_id'];
-                $_SESSION['role_name'] = $user['role_name'];
+                    $_SESSION['user_id'] = $user['user_id'];
+                    $_SESSION['username'] = $user['username'];
+                    $_SESSION['role_id'] = $user['role_id'];
+                    $_SESSION['role_name'] = $user['role_name'];
 
-                $update = $pdo->prepare("
+                    $update = $pdo->prepare("
                     UPDATE users
                     SET last_login_at = NOW()
                     WHERE user_id = :user_id
                 ");
 
-                $update->execute([
-                    'user_id' => $user['user_id']
-                ]);
+                    $update->execute([
+                        'user_id' => $user['user_id']
+                    ]);
 
-                unset($_SESSION['admin_login_csrf']);
+                    unset($_SESSION['admin_login_csrf']);
 
-                header('Location: ../admin/dashboard.php');
-                exit;
+                    header('Location: ../admin/dashboard.php');
+                    exit;
+                }
+
+                loginRateLimitRecordFailure($pdo, $login);
+                $error = 'Invalid credentials or inactive admin account.';
             }
-
-            $error = 'Invalid credentials or inactive admin account.';
         } catch (PDOException $e) {
             error_log('Admin login failed: ' . $e->getMessage());
             $error = 'Unable to process your login. Please try again.';
@@ -104,6 +116,9 @@ $csrfToken = $_SESSION['admin_login_csrf'];
 
     <title>Admin Login | WEAMMS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&amp;family=Roboto:wght@400;500;700&amp;display=swap">
     <link rel="icon" type="image/png" href="../assets/images/wisnoname.png">
     <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="stylesheet" href="../assets/css/admin.css">

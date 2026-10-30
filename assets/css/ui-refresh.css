@@ -1,0 +1,337 @@
+/* ==========================================================================
+   WEAMMS shared "refresh" look
+   One visual language for the student, department head and admin portals:
+   warm page background, no top bar, 14px panels with soft borders, 30px page
+   titles with a divider, uppercase tinted table headers, zebra rows.
+   Values match assets/css/admin-refresh.css. The sidebars keep their own
+   styles (only widths are aligned). Load AFTER the role stylesheets.
+   ========================================================================== */
+:root {
+    --ui-bg: #f3f0ed;
+    --ui-border: #ebe5e0;
+    --ui-tint: #faf7f4;
+    --ui-zebra: #fcfaf8;
+    --ui-hover: #f7f1ec;
+    --ui-muted: #5f5a56;
+    --ui-radius: 14px;
+    --ui-shadow: 0 2px 8px rgb(60 30 20 / 6%);
+}
+
+/* --------------------------------------------------------------------------
+   1. Admin list/form pages and department-head shell pages (.ad-*)
+   -------------------------------------------------------------------------- */
+.ad-head {
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--ui-border);
+}
+
+.ad-head h1 {
+    font-size: 30px;
+    letter-spacing: -0.01em;
+}
+
+.ad-head p {
+    color: var(--ui-muted);
+}
+
+.ad-card {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+}
+
+.ad-table th {
+    padding: 12px 18px;
+    background: var(--ui-tint);
+    border-bottom: 1px solid var(--ui-border);
+    color: var(--ui-muted);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+}
+
+.ad-table td {
+    border-top: 0;
+    border-bottom: 1px solid #f1ece8;
+}
+
+.ad-table tbody tr:nth-child(even) td {
+    background: var(--ui-zebra);
+}
+
+.ad-table tbody tr:hover td {
+    background: var(--ui-hover);
+}
+
+/* --------------------------------------------------------------------------
+   2. Department-head pages on the older layout (body.department-head-dashboard-page)
+   -------------------------------------------------------------------------- */
+body.department-head-dashboard-page {
+    background: var(--ui-bg);
+}
+
+body.department-head-dashboard-page .dashboard-main {
+    background: var(--ui-bg);
+}
+
+body.department-head-dashboard-page .section-heading {
+    padding-bottom: 20px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--ui-border);
+}
+
+body.department-head-dashboard-page .section-heading h2 {
+    color: #1a1a1a;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+}
+
+body.department-head-dashboard-page .section-heading p {
+    color: var(--ui-muted);
+    font-size: 15px;
+}
+
+body.department-head-dashboard-page .department-panel,
+body.department-head-dashboard-page .department-stat-card,
+body.department-head-dashboard-page .department-chart-panel,
+body.department-head-dashboard-page .attendance-monitor-panel,
+body.department-head-dashboard-page .attendance-monitor-card,
+body.department-head-dashboard-page .attendance-record-panel,
+body.department-head-dashboard-page .management-department-card,
+body.department-head-dashboard-page .management-table-wrap,
+body.department-head-dashboard-page .panel {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+}
+
+body.department-head-dashboard-page .management-table th {
+    background: var(--ui-tint);
+    border-bottom: 1px solid var(--ui-border);
+    color: var(--ui-muted);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+body.department-head-dashboard-page .management-table tbody tr:nth-child(even) td {
+    background: var(--ui-zebra);
+}
+
+body.department-head-dashboard-page .management-table tbody tr:hover td {
+    background: var(--ui-hover);
+}
+
+/* --------------------------------------------------------------------------
+   3. Student pages (body.student-dashboard-page)
+   The top bar was removed (the account name now sits in the sidebar, like the
+   admin and department-head sidebars). Sidebar width matches them (249px).
+   -------------------------------------------------------------------------- */
+body.student-dashboard-page {
+    background: var(--ui-bg);
+}
+
+body.student-dashboard-page .student-sidebar {
+    width: 249px;
+}
+
+body.student-dashboard-page .dashboard-main {
+    width: calc(100% - 249px);
+    margin-left: 249px;
+    padding: 0 0 20px;
+    background: var(--ui-bg);
+}
+
+body.student-dashboard-page .dashboard-main > .dashboard-section:first-child {
+    margin-top: 28px;
+}
+
+/* Page title block: eyebrow, 30px title, divider. */
+body.student-dashboard-page .student-module-page > .section-heading,
+body.student-dashboard-page .student-dashboard-welcome > .section-heading {
+    padding-bottom: 20px;
+    margin-bottom: 4px;
+    border-bottom: 2px solid var(--ui-border);
+}
+
+body.student-dashboard-page .student-module-page > .section-heading h2,
+body.student-dashboard-page .student-dashboard-welcome > .section-heading h2 {
+    color: #1a1a1a;
+    font-size: 30px;
+    letter-spacing: -0.01em;
+}
+
+body.student-dashboard-page .section-heading p {
+    color: var(--ui-muted);
+    font-size: 15px;
+}
+
+body.student-dashboard-page .student-eyebrow {
+    color: #8b1e1e;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+}
+
+/* Panels and cards. */
+body.student-dashboard-page .student-content-panel,
+body.student-dashboard-page .student-summary-card,
+body.student-dashboard-page .student-stat-card,
+body.student-dashboard-page .stat-card,
+body.student-dashboard-page .attendance-chart-panel,
+body.student-dashboard-page .student-event-card,
+body.student-dashboard-page .student-schedule-card,
+body.student-dashboard-page .student-detail-section,
+body.student-dashboard-page .attendance-status-card,
+body.student-dashboard-page .panel,
+body.student-dashboard-page .events-panel,
+body.student-dashboard-page .recent-panel {
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    box-shadow: var(--ui-shadow);
+}
+
+body.student-dashboard-page .student-summary-card strong {
+    color: #1a1a1a;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+}
+
+body.student-dashboard-page .student-summary-card > span {
+    color: var(--ui-muted);
+    font-weight: 500;
+}
+
+body.student-dashboard-page .student-summary-grid {
+    gap: 20px;
+}
+
+/* Tables. */
+body.student-dashboard-page .student-module-page .student-table-wrap,
+body.student-dashboard-page .table-wrapper {
+    border-color: var(--ui-border);
+    border-radius: var(--ui-radius);
+}
+
+body.student-dashboard-page .student-table th,
+body.student-dashboard-page .attendance-table th {
+    background: var(--ui-tint);
+    border-bottom: 1px solid var(--ui-border);
+    color: var(--ui-muted);
+    font-size: 11.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+body.student-dashboard-page .student-table tbody tr:nth-child(even) td,
+body.student-dashboard-page .attendance-table tbody tr:nth-child(even) td {
+    background: var(--ui-zebra);
+}
+
+body.student-dashboard-page .student-table tbody tr:hover td,
+body.student-dashboard-page .attendance-table tbody tr:hover td {
+    background: var(--ui-hover);
+}
+
+/* Filter strip. */
+body.student-dashboard-page .student-filter-form {
+    padding: 14px 18px;
+    border: 1px solid var(--ui-border);
+    border-radius: var(--ui-radius);
+    background: var(--ui-tint);
+}
+
+/* Sidebar account block: same structure and spacing as the admin and
+   department-head sidebars (name, role, then a full-width Logout row). */
+body.student-dashboard-page .sidebar-brand {
+    border-bottom-color: rgb(255 255 255 / 20%);
+}
+
+body.student-dashboard-page .sidebar-bottom {
+    padding: 16px 14px 0;
+    border-top-color: rgb(255 255 255 / 20%);
+}
+
+.student-sidebar-user {
+    display: block;
+    padding: 0;
+    color: #fff;
+}
+
+.student-sidebar-user strong,
+.student-sidebar-user span {
+    display: block;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+.student-sidebar-user strong {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.student-sidebar-user span {
+    margin-top: 2px;
+    color: #fff;
+    font-size: 12px;
+}
+
+body.student-dashboard-page .logout-link {
+    margin-top: 16px;
+    box-sizing: border-box;
+}
+
+/* Footer matches the admin footer. */
+body.student-dashboard-page .dashboard-footer,
+body.department-head-dashboard-page .dashboard-footer {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #e1dbd6;
+    color: #444;
+    font-size: 13px;
+}
+
+/* --------------------------------------------------------------------------
+   4. Small screens: student sidebar collapses to an icon rail at <=760px,
+   exactly like the admin and department-head sidebars.
+   -------------------------------------------------------------------------- */
+@media (max-width: 760px) {
+    body.student-dashboard-page .student-sidebar {
+        width: 72px;
+        padding: 18px 8px;
+    }
+
+    body.student-dashboard-page .sidebar-brand {
+        justify-content: center;
+        padding: 0 0 16px;
+    }
+
+    body.student-dashboard-page .sidebar-brand img {
+        width: 44px;
+        height: 44px;
+    }
+
+    body.student-dashboard-page .sidebar-brand > div,
+    body.student-dashboard-page .student-navigation a span,
+    body.student-dashboard-page .logout-link span,
+    body.student-dashboard-page .student-sidebar-user {
+        display: none;
+    }
+
+    body.student-dashboard-page .student-navigation a,
+    body.student-dashboard-page .logout-link {
+        justify-content: center;
+        padding: 13px 0;
+    }
+
+    body.student-dashboard-page .dashboard-main {
+        width: calc(100% - 72px);
+        margin-left: 72px;
+    }
+}
+
+@media print {
+    body.student-dashboard-page .dashboard-main,
+    body.department-head-dashboard-page .dashboard-main {
+        width: 100%;
+        margin: 0;
+    }
+}

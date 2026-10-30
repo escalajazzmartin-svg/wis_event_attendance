@@ -79,10 +79,9 @@ $sql = "
             LIMIT 1
         )
     WHERE ea.student_id = ?
-      AND e.department_id = ?
 ";
 
-$params = [$studentId, $studentDepartmentId];
+$params = [$studentId];
 
 if ($selectedPeriodId !== 0) {
     $sql .= " AND ap.academic_period_id = ?";

@@ -26,7 +26,12 @@ if (!$userId || $userId < 1 || $username === '' || strlen($username) > 100
     http_response_code(400);
     exit('Enter valid user details.');
 }
-$stmt = $pdo->prepare("SELECT role FROM users WHERE user_id = ? AND role IN ('student', 'department_head')");
+$stmt = $pdo->prepare(
+    "SELECT r.role_name
+     FROM users u
+     INNER JOIN roles r ON r.role_id = u.role_id
+     WHERE u.user_id = ? AND r.role_name IN ('student', 'department_head')"
+);
 $stmt->execute([$userId]);
 $role = $stmt->fetchColumn();
 if (!$role) {
@@ -94,4 +99,4 @@ try {
     }
     throw $e;
 }
-adminRedirect('/admin/students/index.php', ['notice' => 'user_updated']);
+adminRedirect($role === 'department_head' ? '/admin/department-heads/index.php' : '/admin/students/index.php', ['notice' => 'user_updated']);

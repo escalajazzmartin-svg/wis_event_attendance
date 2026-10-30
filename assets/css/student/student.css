@@ -26,7 +26,7 @@ body.student-dashboard-page {
     min-height: 100vh;
     background: var(--wis-background);
     color: var(--wis-black);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
 }
 
 .container h2 {
@@ -231,7 +231,7 @@ body.student-dashboard-page {
     box-sizing: border-box;
     background: var(--wis-background);
     color: var(--wis-black);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto', Arial, sans-serif;
 }
 
 .dashboard-topbar {

@@ -23,7 +23,7 @@ $selectedRole = ($_GET['role'] ?? '') === 'department_head' ? 'department_head' 
             <label>Year level<input name="year_level" maxlength="50" data-role="student"></label>
             <label>Section<input name="section" maxlength="100" data-role="student"></label>
         </div>
-        <div class="admin-form-actions"><button class="admin-filter-button" type="submit">Create account</button><a class="admin-reset-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/students/index.php">Cancel</a></div>
+        <div class="admin-form-actions"><button class="admin-filter-button" type="submit">Create account</button><a class="admin-reset-link" href="<?= adminEscape($adminBaseUrl . ($selectedRole === 'department_head' ? '/admin/department-heads/index.php' : '/admin/students/index.php')) ?>">Cancel</a></div>
     </form>
 </section>
 <script>

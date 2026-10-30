@@ -37,15 +37,13 @@ try {
          WHERE aa.appeal_id = ?
            AND aa.student_id = ?
            AND ea.student_id = ?
-           AND e.department_id = ?
            AND aa.appeal_status = 'pending'"
     );
 
     $update->execute([
         $appealId,
         $studentId,
-        $studentId,
-        $studentDepartmentId
+        $studentId
     ]);
 
     if ($update->rowCount() !== 1) {

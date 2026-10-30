@@ -1,0 +1,286 @@
+/* WEAMMS shared theme: loaded last on every role layout.
+   Keeps the school maroon / gold / white palette; refines cards, tables,
+   buttons, banners, sidebar states and keyboard focus. */
+
+:root {
+    --wis-background: #F3F0ED;
+    --wis-card-border: #E7E1DD;
+    --wis-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    --wis-card-shadow-hover: 0 3px 10px rgba(0, 0, 0, 0.12);
+    --wis-muted: #4A4A4A;
+    --wis-row-hover: #FBF3E0;
+    --wis-table-head: #F8F4F2;
+    --wis-radius: 10px;
+}
+
+/* ---------- Keyboard focus ---------- */
+body a:focus-visible,
+body button:focus-visible,
+body input:focus-visible,
+body select:focus-visible,
+body textarea:focus-visible {
+    outline: 3px solid #171717;
+    outline-offset: 2px;
+}
+
+.student-sidebar a:focus-visible {
+    outline-color: var(--wis-gold);
+}
+
+/* ---------- Sidebar ---------- */
+.student-sidebar {
+    background: var(--wis-maroon-dark);
+}
+
+.sidebar-brand {
+    border-bottom-color: rgba(255, 255, 255, 0.35);
+}
+
+.sidebar-brand img {
+    width: 52px;
+    height: 52px;
+    padding: 5px;
+}
+
+.sidebar-brand h2 {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+
+.student-navigation a,
+.logout-link {
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.student-navigation a:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--wis-white);
+}
+
+.student-navigation a.active {
+    background: rgba(255, 255, 255, 0.16);
+    color: var(--wis-gold);
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--wis-gold);
+}
+
+.sidebar-bottom {
+    border-top-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ---------- Top bar and footer ---------- */
+.dashboard-topbar {
+    border-top: 0;
+    border-bottom: 3px solid var(--wis-gold);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-topbar h1 {
+    letter-spacing: 0.03em;
+}
+
+.dashboard-footer,
+.student-footer {
+    border-top-color: #D9D2CD;
+    color: var(--wis-muted);
+    font-size: 13px;
+}
+
+/* ---------- Page banner (dashboards and admin page headings) ---------- */
+body .page-banner,
+body .admin-page-heading,
+body .student-dashboard-welcome .section-heading {
+    position: relative;
+    overflow: hidden;
+    padding: 24px 28px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--wis-maroon), var(--wis-maroon-dark));
+    color: var(--wis-white);
+}
+
+body .page-banner::after,
+body .admin-page-heading::after,
+body .student-dashboard-welcome .section-heading::after {
+    content: "";
+    position: absolute;
+    top: -90px;
+    right: -60px;
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+    background: var(--wis-gold);
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+body .page-banner > *,
+body .admin-page-heading > *,
+body .student-dashboard-welcome .section-heading > * {
+    position: relative;
+    z-index: 1;
+}
+
+body .page-banner h1,
+body .page-banner h2,
+body .admin-page-heading h1,
+body .admin-page-heading h2,
+body .student-dashboard-welcome h2 {
+    color: var(--wis-white);
+}
+
+body .page-banner p,
+body .admin-page-heading p,
+body .student-dashboard-welcome p {
+    color: #F3E5E2;
+}
+
+body .page-banner .admin-eyebrow,
+body .page-banner .student-eyebrow,
+body .admin-page-heading .admin-eyebrow,
+body .student-dashboard-welcome .student-eyebrow {
+    color: var(--wis-gold);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+/* Buttons that sit on the banner: gold primary, white-outline secondary */
+body .page-banner .primary-action,
+body .page-banner .management-button,
+body .admin-page-heading .management-button,
+body .admin-page-heading .admin-filter-button,
+body .admin-page-heading .primary-action {
+    border-color: var(--wis-gold);
+    background: var(--wis-gold);
+    color: #171717;
+}
+
+body .page-banner .management-button-secondary,
+body .admin-page-heading .management-button-secondary {
+    border-color: var(--wis-white);
+    background: transparent;
+    color: var(--wis-white);
+}
+
+/* ---------- Cards and panels ---------- */
+body .admin-summary-card,
+body .student-summary-card,
+body .department-stat-card,
+body .attendance-monitor-card,
+body .admin-panel,
+body .department-panel,
+body .student-content-panel,
+body .student-event-card,
+body .panel,
+body .management-detail-section,
+body .student-detail-section {
+    border: 1px solid var(--wis-card-border);
+    border-radius: var(--wis-radius);
+    box-shadow: var(--wis-card-shadow);
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+body .admin-summary-card:hover,
+body .student-summary-card:hover,
+body .department-stat-card:hover,
+body .attendance-monitor-card:hover,
+body .student-event-card:hover {
+    border-color: #D9CBC6;
+    box-shadow: var(--wis-card-shadow-hover);
+}
+
+body a.department-stat-card {
+    text-decoration: none;
+}
+
+/* ---------- Tables ---------- */
+body .admin-table th,
+body .management-table th,
+body .student-table th {
+    background: var(--wis-table-head);
+    color: var(--wis-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+body .admin-table td,
+body .management-table td,
+body .student-table td {
+    border-bottom: 1px solid #E9E3DF;
+}
+
+body .admin-table tbody tr,
+body .management-table tbody tr,
+body .student-table tbody tr {
+    transition: background 0.12s ease;
+}
+
+body .admin-table tbody tr:hover,
+body .management-table tbody tr:hover,
+body .student-table tbody tr:hover {
+    background: var(--wis-row-hover);
+}
+
+/* ---------- Buttons and links ---------- */
+body .management-button,
+body .primary-action,
+body .admin-filter-button {
+    transition: background 0.15s ease, filter 0.15s ease;
+}
+
+body .management-button:hover,
+body .primary-action:hover,
+body .admin-filter-button:hover {
+    filter: brightness(0.92);
+}
+
+body .management-button-secondary:hover {
+    background: #F7E7E4;
+}
+
+body .management-link,
+body .text-link,
+body .admin-action-link {
+    text-underline-offset: 3px;
+    transition: color 0.12s ease;
+}
+
+body .management-link:hover,
+body .text-link:hover,
+body .admin-action-link:hover {
+    color: var(--wis-maroon-dark);
+    text-decoration: underline;
+}
+
+/* ---------- Form fields ---------- */
+body .management-field input,
+body .management-field select,
+body .management-field textarea,
+body .admin-search-field input,
+body .student-filter-field input,
+body .student-filter-field select,
+body .dh-filter-field input,
+body .dh-filter-field select {
+    border-radius: 6px;
+}
+
+body .management-field input:focus,
+body .management-field select:focus,
+body .management-field textarea:focus,
+body .admin-search-field input:focus {
+    border-color: var(--wis-maroon);
+}
+
+/* ---------- Empty states ---------- */
+body .empty-state,
+body .admin-empty-state {
+    color: var(--wis-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+    }
+}

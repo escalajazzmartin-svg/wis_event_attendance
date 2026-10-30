@@ -33,8 +33,8 @@ $sql = "
             ORDER BY aa_latest.submitted_at DESC, aa_latest.appeal_id DESC
             LIMIT 1
         )
-    WHERE ea.student_id = ? AND e.department_id = ?";
-$params = [$studentId, $studentDepartmentId];
+    WHERE ea.student_id = ?";
+$params = [$studentId];
 if ($academicYear !== '') {
     $sql .= ' AND ap.academic_year = ?';
     $params[] = $academicYear;
@@ -138,8 +138,10 @@ $query = http_build_query(array_filter([
                                 <?php if ($record['appeal_id']): ?>
                                     <a href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/view.php?id=<?= (int) $record['appeal_id'] ?>"><?= studentEscape(ucfirst($record['appeal_status'])) ?></a>
                                     <?php if ($record['appeal_status'] === 'approved'): ?><small> <?= studentEscape($record['reviewer_remarks'] ?: 'Appeal approved') ?></small><?php endif; ?>
-                                <?php else: ?>
+                                <?php elseif (in_array($record['attendance_status'], ['absent', 'late'], true)): ?>
                                     <a href="<?= studentEscape($studentBaseUrl) ?>/student/appeals/create.php?attendance_id=<?= (int) $record['attendance_id'] ?>">Submit appeal</a>
+                                <?php else: ?>
+                                    —
                                 <?php endif; ?>
                             </td>
                         </tr>

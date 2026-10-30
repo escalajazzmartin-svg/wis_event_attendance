@@ -27,4 +27,4 @@ if ($stmt->rowCount() === 0) {
     }
 }
 adminLogActivity($pdo, $active ? 'restored' : 'archived', 'department', $id);
-adminRedirect('/admin/departments/index.php', ['notice' => $active ? 'department_restored' : 'department_archived']);
+adminRedirect(adminReturnPath('/admin/departments/index.php'), ['notice' => $active ? 'department_restored' : 'department_archived']);

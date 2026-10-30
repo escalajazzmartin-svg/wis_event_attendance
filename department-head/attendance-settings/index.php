@@ -1,7 +1,6 @@
 <?php
 
-$pageTitle = 'Attendance Time Rules';
-require_once __DIR__ . '/../../includes/department_head_layout_start.php';
+require_once __DIR__ . '/../../includes/department_head_context.php';
 
 $errors = [];
 $notice = ($_GET['notice'] ?? '') === 'saved';
@@ -22,15 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $eventId = filter_var($_POST['event_id'] ?? null, FILTER_VALIDATE_INT);
         $times = [];
-        foreach (['present_until', 'late_until', 'absent_after'] as $field) {
-            $value = $_POST[$field] ?? '';
-            $parsedValue = dhParseLocalDateTime($value);
-            if ($parsedValue === null) {
-                $errors[] = 'Enter valid present, late, and attendance closing times.';
-                break;
-            }
-            $times[$field] = $parsedValue;
-        }
 
         $event = null;
         if ($eventId === false || $eventId < 1) {
@@ -46,6 +36,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $event = $check->fetch(PDO::FETCH_ASSOC);
             if (!$event) {
                 $errors[] = 'Attendance rules can only be set for an approved event in your department.';
+            }
+        }
+
+        if ($event) {
+            $eventDate = date('Y-m-d', strtotime($event['start_at']));
+            $sameDay = $eventDate === date('Y-m-d', strtotime($event['end_at']));
+            foreach (['present_until', 'late_until', 'absent_after'] as $field) {
+                $value = trim((string) ($_POST[$field] ?? ''));
+                // Same-day events post a time only; the event's date is added here.
+                if ($sameDay && preg_match('/^\d{2}:\d{2}$/', $value)) {
+                    $value = $eventDate . 'T' . $value;
+                }
+                $parsedValue = dhParseLocalDateTime($value);
+                if ($parsedValue === null) {
+                    $errors[] = 'Enter valid present, late, and attendance closing times.';
+                    break;
+                }
+                $times[$field] = $parsedValue;
             }
         }
 
@@ -83,81 +91,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$pageTitle = 'Time Rules';
+$pageClass = 'dh-time-rules-page';
+$shellNavActive = 'time-rules';
+require_once __DIR__ . '/../../includes/department_head_shell_start.php';
+
+$timeValue = static fn (?string $value): string => $value ? date('Y-m-d\TH:i', strtotime($value)) : '';
+$timeOnlyValue = static fn (?string $value): string => $value ? date('H:i', strtotime($value)) : '';
+$isSameDay = static fn (array $event): bool => date('Y-m-d', strtotime($event['start_at'])) === date('Y-m-d', strtotime($event['end_at']));
 ?>
 
-<section class="dashboard-section management-page">
-    <div class="section-heading">
+<section class="ad-page">
+    <header class="ad-head">
         <div>
-            <h2>Attendance Time Rules</h2>
-            <p>Set the present cutoff, late cutoff, and absent cutoff / attendance closing time for approved department events. Scans after the late cutoff and through the absent cutoff are marked Absent; later scans are closed.</p>
+            <h1>Time Rules</h1>
+            <p>Set present, late, and closing cutoffs for approved events.</p>
         </div>
-    </div>
+    </header>
 
     <?php if ($notice): ?>
-        <div class="management-alert management-alert-success" role="status">Attendance rules saved.</div>
+        <div class="ad-notice" role="status">Attendance rules saved.</div>
     <?php endif; ?>
     <?php if ($errors !== []): ?>
-        <div class="management-alert" role="alert">
-            <ul><?php foreach ($errors as $error): ?><li><?= dhEscape($error) ?></li><?php endforeach; ?></ul>
+        <div class="ad-notice ad-notice-error" role="alert">
+            <?php foreach ($errors as $error): ?><div><?= dhEscape($error) ?></div><?php endforeach; ?>
         </div>
     <?php endif; ?>
 
-    <?php if ($events === []): ?>
-        <div class="department-panel empty-state">
-            <strong>No approved events</strong>
-            <p>Approved department events will appear here for attendance rule configuration.</p>
-        </div>
-    <?php else: ?>
-        <div class="management-table-wrap">
-            <table class="management-table">
-                <thead>
-                    <tr><th scope="col">Event</th><th scope="col">Event schedule</th><th scope="col">Attendance cutoffs</th><th scope="col">Save rules</th></tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($events as $event): ?>
-                        <?php
-                        $timeValue = static fn(?string $value): string => $value
-                            ? date('Y-m-d\TH:i', strtotime($value))
-                            : '';
-                        ?>
+    <div class="ad-note">Students arriving after the late cutoff are marked absent until attendance closes; later scans are closed.</div>
+
+    <div class="ad-card">
+        <?php if ($events === []): ?>
+            <div class="ad-empty">
+                <strong>No approved events</strong>
+                Approved department events will appear here for attendance rule configuration.
+            </div>
+        <?php else: ?>
+            <div class="ad-table-wrap">
+                <table class="ad-table">
+                    <thead>
                         <tr>
-                            <td data-label="Event">
-                                <strong><?= dhEscape($event['event_title']) ?></strong>
-                                <span><a href="<?= dhEscape($baseUrl) ?>/department-head/attendance/records.php?event_id=<?= (int) $event['event_id'] ?>">View barcode attendance</a></span>
-                                <span><a href="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $event['event_id'] ?>">Open barcode scanner</a></span>
-                            </td>
-                            <td data-label="Event schedule">
-                                <?= dhEscape(date('M j, Y · g:i A', strtotime($event['start_at']))) ?>
-                                <span>to <?= dhEscape(date('g:i A', strtotime($event['end_at']))) ?></span>
-                            </td>
-                            <td data-label="Attendance cutoffs">
-                                <form id="rules-<?= (int) $event['event_id'] ?>" method="post" action="<?= dhEscape($baseUrl) ?>/department-head/attendance-settings/index.php">
-                                    <input type="hidden" name="csrf_token" value="<?= dhEscape(dhCsrfToken()) ?>">
-                                    <input type="hidden" name="event_id" value="<?= (int) $event['event_id'] ?>">
-                                    <label>Present cutoff
-                                        <input type="datetime-local" name="present_until" required value="<?= dhEscape($timeValue($event['present_until'])) ?>">
-                                    </label>
-                                    <label>Late cutoff
-                                        <input type="datetime-local" name="late_until" required value="<?= dhEscape($timeValue($event['late_until'])) ?>">
-                                    </label>
-                                    <label>Attendance closing
-                                        <input type="datetime-local" name="absent_after" required value="<?= dhEscape($timeValue($event['absent_after'])) ?>">
-                                    </label>
-                                </form>
-                            </td>
-                            <td data-label="Save rules">
-                                <button class="management-button" type="submit" form="rules-<?= (int) $event['event_id'] ?>">Save</button>
-                            </td>
+                            <th scope="col">Event</th>
+                            <th scope="col">Present cutoff</th>
+                            <th scope="col">Late cutoff</th>
+                            <th scope="col">Attendance closing</th>
+                            <th scope="col">Actions</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($events as $event): ?>
+                            <?php
+                            $formId = 'rules-' . (int) $event['event_id'];
+                            $sameDay = $isSameDay($event);
+                            $inputType = $sameDay ? 'time' : 'datetime-local';
+                            $format = $sameDay ? $timeOnlyValue : $timeValue;
+                            ?>
+                            <tr>
+                                <td>
+                                    <span class="ad-strong"><?= dhEscape($event['event_title']) ?></span><br>
+                                    <span class="ad-muted"><?= dhEscape(date('M j', strtotime($event['start_at']))) ?> · <?= dhEscape(date('g:i A', strtotime($event['start_at']))) ?>–<?= dhEscape(date('g:i A', strtotime($event['end_at']))) ?></span>
+                                    <?php if ($sameDay): ?><br><span class="ad-muted">Single-day event: the date is set automatically; edit the time only.</span><?php endif; ?>
+                                </td>
+                                <td>
+                                    <label class="visually-hidden" for="<?= $formId ?>-present">Present cutoff for <?= dhEscape($event['event_title']) ?></label>
+                                    <input class="ad-time" id="<?= $formId ?>-present" type="<?= $inputType ?>" name="present_until" form="<?= $formId ?>" required value="<?= dhEscape($format($event['present_until'])) ?>">
+                                </td>
+                                <td>
+                                    <label class="visually-hidden" for="<?= $formId ?>-late">Late cutoff for <?= dhEscape($event['event_title']) ?></label>
+                                    <input class="ad-time" id="<?= $formId ?>-late" type="<?= $inputType ?>" name="late_until" form="<?= $formId ?>" required value="<?= dhEscape($format($event['late_until'])) ?>">
+                                </td>
+                                <td>
+                                    <label class="visually-hidden" for="<?= $formId ?>-close">Attendance closing for <?= dhEscape($event['event_title']) ?></label>
+                                    <input class="ad-time" id="<?= $formId ?>-close" type="<?= $inputType ?>" name="absent_after" form="<?= $formId ?>" required value="<?= dhEscape($format($event['absent_after'])) ?>">
+                                </td>
+                                <td>
+                                    <form id="<?= $formId ?>" method="post" action="<?= dhEscape($baseUrl) ?>/department-head/attendance-settings/index.php">
+                                        <input type="hidden" name="csrf_token" value="<?= dhEscape(dhCsrfToken()) ?>">
+                                        <input type="hidden" name="event_id" value="<?= (int) $event['event_id'] ?>">
+                                        <button class="ad-btn ad-btn-solid sm" type="submit">Save</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php endif; ?>
+    </div>
 </section>
 
-<?php require __DIR__ . '/../../includes/footer.php'; ?>
-
-</main>
-</body>
-</html>
+<?php require __DIR__ . '/../../includes/department_head_shell_end.php'; ?>

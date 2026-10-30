@@ -8,15 +8,16 @@ if (!$userId || $userId < 1) {
     exit('A valid user account is required.');
 }
 $stmt = $pdo->prepare(
-    "SELECT u.user_id, u.username, u.email, u.role, u.account_status,
+    "SELECT u.user_id, u.username, u.email, r.role_name AS role, u.account_status,
             s.student_id, s.student_number, s.department_id, s.year_level, s.section,
             s.first_name AS student_first_name, s.middle_name AS student_middle_name, s.last_name AS student_last_name,
             dh.department_head_id, dh.employee_number, dh.department_id AS head_department_id,
             dh.first_name AS head_first_name, dh.middle_name AS head_middle_name, dh.last_name AS head_last_name
      FROM users u
+     INNER JOIN roles r ON r.role_id = u.role_id
      LEFT JOIN students s ON s.user_id = u.user_id
      LEFT JOIN department_heads dh ON dh.user_id = u.user_id
-     WHERE u.user_id = ? AND u.role IN ('student', 'department_head')"
+     WHERE u.user_id = ? AND r.role_name IN ('student', 'department_head')"
 );
 $stmt->execute([$userId]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -26,8 +27,16 @@ if (!$user) {
 }
 $departments = $pdo->query('SELECT department_id, department_name FROM departments ORDER BY department_name')->fetchAll(PDO::FETCH_ASSOC);
 $isStudent = $user['role'] === 'student';
+$listPath = $isStudent ? '/admin/students/index.php' : '/admin/department-heads/index.php';
+$permissions = null;
+if (!$isStudent) {
+    $permissionStmt = $pdo->prepare('SELECT department_head_can_edit, department_head_can_edit_attendance FROM departments WHERE department_id = ?');
+    $permissionStmt->execute([(int) $user['head_department_id']]);
+    $permissions = $permissionStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+}
 ?>
 <section class="admin-content-section">
+    <?php if (($_GET['notice'] ?? '') === 'permission_updated'): ?><div class="ad-notice" role="status">Permissions updated.</div><?php endif; ?>
     <div class="admin-page-heading"><div><span class="admin-eyebrow">People and access</span><h2>Edit <?= $isStudent ? 'Student' : 'Department Head' ?></h2><p>Update account details and department assignment.</p></div></div>
     <form class="admin-panel admin-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/students/update.php">
         <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>"><input type="hidden" name="user_id" value="<?= (int) $user['user_id'] ?>">
@@ -47,7 +56,40 @@ $isStudent = $user['role'] === 'student';
             <?php endif; ?>
             <label>Account status<select name="account_status" required><?php foreach (['active', 'inactive', 'locked'] as $status): ?><option value="<?= $status ?>" <?= $user['account_status'] === $status ? 'selected' : '' ?>><?= ucfirst($status) ?></option><?php endforeach; ?></select></label>
         </div>
-        <div class="admin-form-actions"><button class="admin-filter-button" type="submit">Save changes</button><a class="admin-reset-link" href="<?= adminEscape($adminBaseUrl) ?>/admin/students/index.php">Cancel</a></div>
+        <div class="admin-form-actions"><button class="admin-filter-button" type="submit">Save changes</button><a class="admin-reset-link" href="<?= adminEscape($adminBaseUrl . $listPath) ?>">Cancel</a></div>
     </form>
+    <?php if ($isStudent): ?>
+        <div class="ad-card ad-card-form">
+            <h3 class="ad-card-title">Attendance QR code</h3>
+            <p class="ad-card-sub">Regenerating the QR code stops the old code from working.</p>
+            <form class="ad-perm-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/students/regenerate-barcode.php" onsubmit="return confirm('Regenerate this student QR code? The old code will stop working.');">
+                <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
+                <input type="hidden" name="user_id" value="<?= (int) $user['user_id'] ?>">
+                <input type="hidden" name="return" value="students">
+                <span>Issue a new QR code for this student</span>
+                <button class="ad-btn" type="submit">Regenerate QR code</button>
+            </form>
+        </div>
+    <?php elseif ($permissions !== null): ?>
+        <div class="ad-card ad-card-form">
+            <h3 class="ad-card-title">Permissions</h3>
+            <p class="ad-card-sub">These apply to every head of this department.</p>
+            <?php foreach ([
+                'department' => ['Edit department details', (int) $permissions['department_head_can_edit'] === 1],
+                'attendance' => ['Correct attendance', (int) $permissions['department_head_can_edit_attendance'] === 1],
+            ] as $permission => [$label, $enabled]): ?>
+                <form class="ad-perm-form" method="post" action="<?= adminEscape($adminBaseUrl) ?>/admin/department-heads/permissions.php">
+                    <input type="hidden" name="csrf_token" value="<?= adminEscape($adminCsrfToken) ?>">
+                    <input type="hidden" name="department_id" value="<?= (int) $user['head_department_id'] ?>">
+                    <input type="hidden" name="permission" value="<?= adminEscape($permission) ?>">
+                    <input type="hidden" name="enabled" value="<?= $enabled ? '0' : '1' ?>">
+                    <input type="hidden" name="return" value="user_edit">
+                    <input type="hidden" name="user_id" value="<?= (int) $user['user_id'] ?>">
+                    <span><?= adminEscape($label) ?><small><?= $enabled ? 'Allowed' : 'View only' ?></small></span>
+                    <button class="ad-btn" type="submit"><?= $enabled ? 'Revoke' : 'Allow' ?></button>
+                </form>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 </section>
 <?php require __DIR__ . '/../../includes/footer.php'; ?></main></body></html>

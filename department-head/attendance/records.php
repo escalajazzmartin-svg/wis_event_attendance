@@ -39,20 +39,18 @@ if (
 }
 
 $sql = "
-    SELECT s.student_id, s.student_number, s.first_name, s.middle_name,
-           s.last_name, s.year_level, s.section, s.enrollment_status,
+    SELECT r.student_id, r.student_number, r.first_name, r.middle_name,
+           r.last_name, r.year_level, r.section,
            ea.attendance_id, ea.attendance_status, ea.check_in_at,
            ea.record_source, ea.remarks, recorder.username AS recorded_by
-    FROM students s
+    FROM event_attendance_roster r
     LEFT JOIN event_attendance ea
-        ON ea.student_id = s.student_id
-       AND ea.event_id = :record_event_id
+        ON ea.student_id = r.student_id
+       AND ea.event_id = r.event_id
     LEFT JOIN users recorder ON recorder.user_id = ea.recorded_by_user_id
-    WHERE s.department_id = :student_department_id
-      AND (s.enrollment_status = 'enrolled' OR ea.attendance_id IS NOT NULL)";
+    WHERE r.event_id = :record_event_id";
 $params = [
     'record_event_id' => $eventId,
-    'student_department_id' => $departmentId,
 ];
 
 if ($statusFilter === 'not_recorded') {
@@ -64,12 +62,12 @@ if ($statusFilter === 'not_recorded') {
 
 if ($search !== '') {
     $sql .= " AND (
-        s.student_number LIKE :search_number
-        OR s.first_name LIKE :search_first
-        OR s.middle_name LIKE :search_middle
-        OR s.last_name LIKE :search_last
-        OR s.section LIKE :search_section
-        OR s.year_level LIKE :search_year
+        r.student_number LIKE :search_number
+        OR r.first_name LIKE :search_first
+        OR r.middle_name LIKE :search_middle
+        OR r.last_name LIKE :search_last
+        OR r.section LIKE :search_section
+        OR r.year_level LIKE :search_year
     )";
     $searchTerm = '%' . $search . '%';
     $params += [
@@ -82,25 +80,7 @@ if ($search !== '') {
     ];
 }
 
-$participantEventId = (int) $eventId;
-$participantScopeSql = "
-    AND (
-        NOT EXISTS (
-            SELECT 1 FROM event_participants ep_any
-            WHERE ep_any.event_id = $participantEventId
-        )
-        OR EXISTS (
-            SELECT 1 FROM event_participants ep
-            WHERE ep.event_id = $participantEventId
-              AND (
-                (ep.participant_type = 'student' AND ep.student_id = s.student_id)
-                OR (ep.participant_type = 'year_level' AND ep.year_level = s.year_level)
-                OR (ep.participant_type = 'section' AND ep.year_level = s.year_level AND ep.section = s.section)
-              )
-        )
-    )";
-$sql .= $participantScopeSql;
-$sql .= ' ORDER BY s.last_name, s.first_name, s.student_number';
+$sql .= ' ORDER BY r.last_name, r.first_name, r.student_number';
 $recordsStmt = $pdo->prepare($sql);
 $recordsStmt->execute($params);
 $records = $recordsStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -112,33 +92,14 @@ $summaryStmt = $pdo->prepare(
             COALESCE(SUM(ea.attendance_status = 'late'), 0) AS late_count,
             COALESCE(SUM(ea.attendance_status = 'absent'), 0) AS absent_count,
             COALESCE(SUM(ea.attendance_status = 'excused'), 0) AS excused_count
-     FROM students s
+     FROM event_attendance_roster r
      LEFT JOIN event_attendance ea
-        ON ea.student_id = s.student_id
-       AND ea.event_id = :summary_event_id
-     WHERE s.department_id = :summary_department_id
-       AND (s.enrollment_status = 'enrolled' OR ea.attendance_id IS NOT NULL)
-       AND (
-           NOT EXISTS (
-               SELECT 1 FROM event_participants ep_any
-               WHERE ep_any.event_id = :summary_participant_event_id
-           )
-           OR EXISTS (
-               SELECT 1 FROM event_participants ep
-               WHERE ep.event_id = :summary_participant_event_match
-                 AND (
-                    (ep.participant_type = 'student' AND ep.student_id = s.student_id)
-                    OR (ep.participant_type = 'year_level' AND ep.year_level = s.year_level)
-                    OR (ep.participant_type = 'section' AND ep.year_level = s.year_level AND ep.section = s.section)
-                 )
-           )
-       )"
+        ON ea.student_id = r.student_id
+       AND ea.event_id = r.event_id
+     WHERE r.event_id = :summary_event_id"
 );
 $summaryStmt->execute([
     'summary_event_id' => $eventId,
-    'summary_department_id' => $departmentId,
-    'summary_participant_event_id' => $eventId,
-    'summary_participant_event_match' => $eventId,
 ]);
 $summary = $summaryStmt->fetch(PDO::FETCH_ASSOC);
 $notRecordedCount = max(0, (int) $summary['roster_count'] - (int) $summary['recorded_count']);
@@ -161,7 +122,7 @@ $notRecordedCount = max(0, (int) $summary['roster_count'] - (int) $summary['reco
         <a class="management-button management-button-secondary" href="<?= dhEscape($baseUrl) ?>/department-head/attendance-settings/index.php">Attendance rules</a>
         <a class="management-button management-button-secondary" href="<?= dhEscape($baseUrl) ?>/department-head/appeals/index.php">Review appeals</a>
         <?php if (strtolower($event['event_status']) === 'approved'): ?>
-            <a class="management-button" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">Scan barcode</a>
+            <a class="management-button" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">Scan QR code</a>
         <?php endif; ?>
     </div>
 
@@ -278,7 +239,7 @@ $notRecordedCount = max(0, (int) $summary['roster_count'] - (int) $summary['reco
                                     <?= $record['check_in_at'] ? dhEscape(date('M j, Y · g:i A', strtotime($record['check_in_at']))) : '—' ?>
                                 </td>
                                 <td data-label="Source">
-                                    <?= $record['record_source'] ? dhEscape(ucwords(str_replace('_', ' ', $record['record_source']))) : '—' ?>
+                                    <?= $record['record_source'] ? dhEscape(ucwords(str_replace(['_', 'barcode'], [' ', 'QR code'], $record['record_source']))) : '—' ?>
                                 </td>
                                 <td data-label="Recorded by"><?= dhEscape($record['recorded_by'] ?: '—') ?></td>
                                 <td data-label="Remarks"><?= dhEscape($record['remarks'] ?: '—') ?></td>

@@ -6,7 +6,7 @@ $requestInput = $_SERVER['REQUEST_METHOD'] === 'POST' ? $_POST : $_GET;
 $eventId = filter_var($requestInput['event_id'] ?? null, FILTER_VALIDATE_INT);
 if ($eventId === false || $eventId < 1) {
     http_response_code(400);
-    exit('Select a valid event to scan attendance barcodes.');
+    exit('Select a valid event to scan attendance QR codes.');
 }
 
 $eventStmt = $pdo->prepare(
@@ -38,11 +38,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!dhVerifyCsrf($_POST['csrf_token'] ?? null)) {
         $error = 'Your session token expired. Refresh this page and try again.';
     } elseif (!$isApproved) {
-        $error = 'Only approved events can receive barcode attendance.';
+        $error = 'Only approved events can receive QR attendance.';
     } elseif (!$hasRules) {
         $error = 'Configure attendance time rules for this event before scanning students.';
     } elseif (!preg_match('/\A[a-fA-F0-9]{64}\z/', $barcode)) {
-        $error = 'The scanned barcode is not a valid student barcode.';
+        $error = 'The scanned code is not a valid student QR code.';
     } else {
         try {
             $pdo->beginTransaction();
@@ -73,55 +73,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $now = $pdo->query('SELECT NOW()')->fetchColumn();
             if ($now < $lockedEvent['start_at']) {
-                throw new DomainException('Barcode check-in is not open yet. It opens at the event start time.');
+                throw new DomainException('QR check-in is not open yet. It opens at the event start time.');
             }
             if ($now > $lockedEvent['end_at'] || $now > $lockedEvent['absent_after']) {
-                throw new DomainException('Barcode check-in is closed for this event.');
+                throw new DomainException('QR check-in is closed for this event.');
             }
 
             $studentStmt = $pdo->prepare(
                 "SELECT s.student_id, s.student_number, s.first_name,
                         s.middle_name, s.last_name, s.year_level, s.section
                  FROM students s
+                 INNER JOIN users u ON u.user_id = s.user_id
                  WHERE s.barcode_token = ?
-                   AND s.department_id = ?
                    AND s.enrollment_status = 'enrolled'
+                   AND u.account_status = 'active'
                  LIMIT 1
                  FOR UPDATE"
             );
-            $studentStmt->execute([$barcode, $departmentId]);
+            $studentStmt->execute([$barcode]);
             $student = $studentStmt->fetch(PDO::FETCH_ASSOC);
             if (!$student) {
-                throw new DomainException('This barcode does not match an enrolled student in your department.');
+                throw new DomainException('This QR code does not match an enrolled student in your department.');
             }
 
-            $participantStmt = $pdo->prepare(
-                "SELECT
-                    NOT EXISTS (
-                        SELECT 1 FROM event_participants WHERE event_id = ?
-                    ) AS includes_all,
-                    EXISTS (
-                        SELECT 1 FROM event_participants ep
-                        WHERE ep.event_id = ?
-                          AND (
-                            (ep.participant_type = 'student' AND ep.student_id = ?)
-                            OR (ep.participant_type = 'year_level' AND ep.year_level = ?)
-                            OR (ep.participant_type = 'section'
-                                AND ep.year_level = ? AND ep.section = ?)
-                          )
-                    ) AS explicitly_included"
+            $rosterStmt = $pdo->prepare(
+                'SELECT 1 FROM event_attendance_roster
+                 WHERE event_id = ? AND student_id = ?
+                 FOR UPDATE'
             );
-            $participantStmt->execute([
-                $eventId,
-                $eventId,
-                $student['student_id'],
-                $student['year_level'],
-                $student['year_level'],
-                $student['section'],
-            ]);
-            $participant = $participantStmt->fetch(PDO::FETCH_ASSOC);
-            if (!(int) $participant['includes_all'] && !(int) $participant['explicitly_included']) {
-                throw new DomainException('This student is not listed as a participant for this event.');
+            $rosterStmt->execute([$eventId, $student['student_id']]);
+            if ($rosterStmt->fetchColumn() === false) {
+                throw new DomainException('This student was not eligible when the event was approved.');
             }
 
             $existingStmt = $pdo->prepare(
@@ -171,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'check_in_at' => $now,
                     'record_source' => 'barcode',
                 ], JSON_THROW_ON_ERROR),
-                'Barcode attendance submitted by Department Head.',
+                'QR attendance submitted by Department Head.',
             ]);
 
             $pdo->commit();
@@ -212,28 +194,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $recentStmt = $pdo->prepare(
     "SELECT ea.attendance_status, ea.check_in_at,
-            s.student_number, s.first_name, s.middle_name, s.last_name,
+            r.student_number, r.first_name, r.middle_name, r.last_name,
             u.username AS recorded_by
      FROM event_attendance ea
      INNER JOIN events e ON e.event_id = ea.event_id
-     INNER JOIN students s ON s.student_id = ea.student_id
+     INNER JOIN event_attendance_roster r
+        ON r.event_id = ea.event_id AND r.student_id = ea.student_id
      LEFT JOIN users u ON u.user_id = ea.recorded_by_user_id
      WHERE ea.event_id = ? AND e.department_id = ?
-       AND s.department_id = ? AND ea.record_source = 'barcode'
+       AND ea.record_source = 'barcode'
      ORDER BY ea.check_in_at DESC, ea.attendance_id DESC
      LIMIT 15"
 );
-$recentStmt->execute([$eventId, $departmentId, $departmentId]);
+$recentStmt->execute([$eventId, $departmentId]);
 $recentScans = $recentStmt->fetchAll(PDO::FETCH_ASSOC);
 
-$pageTitle = 'Scan Attendance Barcode';
+$pageTitle = 'Scan Attendance QR Code';
 require_once __DIR__ . '/../../includes/department_head_layout_start.php';
 ?>
 
 <section class="dashboard-section management-page barcode-scan-page">
     <div class="section-heading">
         <div>
-            <h2>Scan Attendance Barcode</h2>
+            <h2>Scan Attendance QR Code</h2>
             <p><?= dhEscape($event['event_title']) ?> · <?= dhEscape(date('M j, Y', strtotime($event['start_at']))) ?></p>
         </div>
         <a class="management-button management-button-secondary" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/records.php?event_id=<?= (int) $eventId ?>">View attendance records</a>
@@ -269,11 +252,21 @@ require_once __DIR__ . '/../../includes/department_head_layout_start.php';
                 <div><dt>Absent cutoff / check-in closes</dt><dd><?= dhEscape(date('M j, g:i A', strtotime($event['absent_after']))) ?></dd></div>
             </dl>
             <p class="barcode-scan-guidance">
-                Scan a student's barcode using a USB/Bluetooth barcode reader. The reader should enter the student's 64-character barcode token and send Enter. Scans through the present cutoff are Present; scans through the late cutoff are Late; scans after that through the absent cutoff are recorded Absent. Scanning closes after the absent cutoff. Duplicate scans are not recorded twice.
+                Scan a student's QR code with this device's camera, or with a USB/Bluetooth scanner that types the student's 64-character code and sends Enter. Scans through the present cutoff are Present; scans through the late cutoff are Late; scans after that through the absent cutoff are recorded Absent. Scanning closes after the absent cutoff. Duplicate scans are not recorded twice.
             </p>
-            <form class="barcode-scan-form" method="post" action="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">
+            <div class="qr-camera" id="qrCamera">
+                <div class="qr-camera-view" id="qrCameraView" hidden>
+                    <video id="qrVideo" playsinline muted></video>
+                    <span class="qr-camera-frame" aria-hidden="true"></span>
+                </div>
+                <p class="qr-camera-status" id="qrCameraStatus" role="status">Camera is off.</p>
+                <div class="qr-camera-actions">
+                    <button class="management-button" type="button" id="qrCameraToggle">Start camera</button>
+                </div>
+            </div>
+            <form class="barcode-scan-form" id="qrScanForm" method="post" action="<?= dhEscape($baseUrl) ?>/department-head/attendance/scan.php?event_id=<?= (int) $eventId ?>">
                 <input type="hidden" name="csrf_token" value="<?= dhEscape(dhCsrfToken()) ?>">
-                <label for="barcode">Student barcode</label>
+                <label for="barcode">Or enter / scan the student code</label>
                 <input
                     id="barcode"
                     name="barcode"
@@ -285,7 +278,6 @@ require_once __DIR__ . '/../../includes/department_head_layout_start.php';
                     maxlength="64"
                     pattern="[a-fA-F0-9]{64}"
                     required
-                    autofocus
                     value="<?= dhEscape($barcode) ?>">
                 <button class="management-button" type="submit">Record scan</button>
             </form>
@@ -295,13 +287,13 @@ require_once __DIR__ . '/../../includes/department_head_layout_start.php';
     <div class="barcode-scan-monitor">
         <div class="attendance-monitor-panel-heading">
             <div>
-                <h3>Recent barcode submissions</h3>
+                <h3>Recent QR submissions</h3>
                 <p>Latest 15 scans for this department event, including the staff account that recorded each scan.</p>
             </div>
             <a class="management-link" href="<?= dhEscape($baseUrl) ?>/department-head/attendance/records.php?event_id=<?= (int) $eventId ?>">Open full roster</a>
         </div>
         <?php if ($recentScans === []): ?>
-            <div class="department-panel empty-state"><strong>No barcode scans yet</strong><p>Successful student scans will be listed here.</p></div>
+            <div class="department-panel empty-state"><strong>No QR scans yet</strong><p>Successful student scans will be listed here.</p></div>
         <?php else: ?>
             <div class="management-table-wrap">
                 <table class="management-table">
@@ -325,12 +317,122 @@ require_once __DIR__ . '/../../includes/department_head_layout_start.php';
 
 <?php require __DIR__ . '/../../includes/footer.php'; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
-    const barcodeInput = document.getElementById('barcode');
-    if (barcodeInput) {
-        barcodeInput.focus();
-        barcodeInput.addEventListener('focus', () => barcodeInput.select());
-    }
+    (() => {
+        const form = document.getElementById('qrScanForm');
+        const input = document.getElementById('barcode');
+        const toggle = document.getElementById('qrCameraToggle');
+        const view = document.getElementById('qrCameraView');
+        const video = document.getElementById('qrVideo');
+        const statusEl = document.getElementById('qrCameraStatus');
+        if (!form || !input || !toggle || !video) {
+            return;
+        }
+
+        const PREF_KEY = 'weamms_qr_camera';
+        const TOKEN_PATTERN = /^[a-fA-F0-9]{64}$/;
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d', { willReadFrequently: true });
+        let stream = null;
+        let frameRequest = null;
+        let submitted = false;
+
+        const setStatus = (message) => { statusEl.textContent = message; };
+        const remember = (on) => {
+            try { window.localStorage.setItem(PREF_KEY, on ? '1' : '0'); } catch (error) { /* storage unavailable */ }
+        };
+
+        const stopCamera = () => {
+            if (frameRequest !== null) {
+                window.cancelAnimationFrame(frameRequest);
+                frameRequest = null;
+            }
+            if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+                stream = null;
+            }
+            video.srcObject = null;
+            view.hidden = true;
+            toggle.textContent = 'Start camera';
+        };
+
+        const tick = () => {
+            if (!stream || submitted) {
+                return;
+            }
+            if (video.readyState === video.HAVE_ENOUGH_DATA && video.videoWidth > 0) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                const image = context.getImageData(0, 0, canvas.width, canvas.height);
+                const code = window.jsQR ? window.jsQR(image.data, image.width, image.height, { inversionAttempts: 'dontInvert' }) : null;
+                if (code) {
+                    const value = code.data.trim();
+                    if (TOKEN_PATTERN.test(value)) {
+                        submitted = true;
+                        input.value = value;
+                        setStatus('QR code read. Recording attendance…');
+                        stopCamera();
+                        form.submit();
+                        return;
+                    }
+                    setStatus('That QR code is not a WEAMMS student code. Keep scanning.');
+                }
+            }
+            frameRequest = window.requestAnimationFrame(tick);
+        };
+
+        const startCamera = async () => {
+            if (!window.jsQR) {
+                setStatus('The QR reader could not be loaded. Use the code field below instead.');
+                return;
+            }
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                setStatus('Camera access needs HTTPS (or localhost). Use the code field below instead.');
+                return;
+            }
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { ideal: 'environment' } },
+                    audio: false
+                });
+                video.srcObject = stream;
+                await video.play();
+                view.hidden = false;
+                toggle.textContent = 'Stop camera';
+                setStatus('Point the camera at the student\'s QR code.');
+                remember(true);
+                frameRequest = window.requestAnimationFrame(tick);
+            } catch (error) {
+                stopCamera();
+                setStatus('Camera unavailable or permission denied. Use the code field below instead.');
+            }
+        };
+
+        toggle.addEventListener('click', () => {
+            if (stream) {
+                stopCamera();
+                remember(false);
+                setStatus('Camera is off.');
+            } else {
+                startCamera();
+            }
+        });
+
+        window.addEventListener('pagehide', stopCamera);
+
+        input.addEventListener('focus', () => input.select());
+
+        // Keep scanning after each recorded student: restart the camera if it was on.
+        let wasOn = false;
+        try { wasOn = window.localStorage.getItem(PREF_KEY) === '1'; } catch (error) { /* ignore */ }
+        if (wasOn) {
+            startCamera();
+        } else {
+            input.focus();
+        }
+    })();
 </script>
 
 </main>

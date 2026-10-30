@@ -11,15 +11,15 @@ if ($attendanceId === false || $attendanceId < 1) {
 
 $scopeStmt = $pdo->prepare(
     'SELECT ea.attendance_id, ea.event_id, e.event_title,
-            s.student_number, s.first_name, s.middle_name, s.last_name
+            r.student_number, r.first_name, r.middle_name, r.last_name
      FROM event_attendance ea
      INNER JOIN events e ON e.event_id = ea.event_id
-     INNER JOIN students s ON s.student_id = ea.student_id
+     INNER JOIN event_attendance_roster r
+        ON r.event_id = ea.event_id AND r.student_id = ea.student_id
      WHERE ea.attendance_id = ? AND e.department_id = ?
-       AND s.department_id = ?
      LIMIT 1'
 );
-$scopeStmt->execute([$attendanceId, $departmentId, $departmentId]);
+$scopeStmt->execute([$attendanceId, $departmentId]);
 $attendance = $scopeStmt->fetch(PDO::FETCH_ASSOC);
 if (!$attendance) {
     http_response_code(404);

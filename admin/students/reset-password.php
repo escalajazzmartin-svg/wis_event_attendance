@@ -16,7 +16,12 @@ if (!$userId || $userId < 1) {
     exit('A valid account is required.');
 }
 $temporaryPassword = bin2hex(random_bytes(12));
-$stmt = $pdo->prepare("UPDATE users SET password_hash = ? WHERE user_id = ? AND role IN ('student', 'department_head')");
+$stmt = $pdo->prepare(
+    "UPDATE users u
+     INNER JOIN roles r ON r.role_id = u.role_id
+     SET u.password_hash = ?
+     WHERE u.user_id = ? AND r.role_name IN ('student', 'department_head')"
+);
 $stmt->execute([password_hash($temporaryPassword, PASSWORD_DEFAULT), $userId]);
 if ($stmt->rowCount() === 0) {
     http_response_code(404);
@@ -24,4 +29,4 @@ if ($stmt->rowCount() === 0) {
 }
 adminLogActivity($pdo, 'reset password for', 'user', $userId);
 $_SESSION['admin_temporary_password'] = $temporaryPassword;
-adminRedirect('/admin/students/index.php', ['notice' => 'password_reset']);
+adminRedirect(adminReturnPath('/admin/students/index.php'), ['notice' => 'password_reset']);
